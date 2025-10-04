@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: athena-mine-worker-service
+  graphql:
+    schema:
+      locations: "classpath:graphql/**/"
 
 eureka:
   instance:
@@ -13,3 +16,6 @@ eureka:
     register-with-eureka: true
     service-url:
       defaultZone: http://localhost:8761/eureka
+
+github:
+  token: ${GITHUB_TOKEN}

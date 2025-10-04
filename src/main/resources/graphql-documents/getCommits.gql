@@ -1,0 +1,46 @@
+query getCommit($owner: String!, $name: String!) {
+    repository(owner: $owner, name: $name) {
+        defaultBranchRef {
+            target {
+                ... on Commit {
+                    history(first: 100) {
+                        nodes {
+                            oid
+                            message
+                            messageBody
+                            additions
+                            deletions
+
+                            author {
+                                avatarUrl
+                                date
+                                email
+                                name
+
+                                user {
+                                    id
+                                    login
+                                }
+                            }
+                            committer {
+                                avatarUrl
+                                date
+                                email
+                                name
+
+                                user {
+                                    id
+                                    login
+                                }
+                            }
+
+                            authoredByCommitter
+                            commitUrl
+                            committedDate
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

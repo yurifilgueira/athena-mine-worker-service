@@ -1,11 +1,12 @@
 package com.projectathena.mineworkerservice.dto.commit;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 public record GitActor(
         String avatarUrl,
-        LocalDateTime date,
+        Date date,
         String email,
-        String name
+        String name,
+        User user
 ) {
 }

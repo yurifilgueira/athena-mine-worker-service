@@ -5,7 +5,7 @@ import java.time.ZonedDateTime;
 public record RepositoryMineRequest(
         String requestedBy,
         String projectName,
-        String organizationName,
+        String owner,
         ZonedDateTime requestedAt
 ) {
 }
