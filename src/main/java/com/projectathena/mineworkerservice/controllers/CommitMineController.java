@@ -1,7 +1,7 @@
 package com.projectathena.mineworkerservice.controllers;
 
-import com.projectathena.mineworkerservice.collectors.GitHubCommitCollector;
 import com.projectathena.mineworkerservice.dto.requests.RepositoryMineRequest;
+import com.projectathena.mineworkerservice.service.MineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,19 +9,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value = "/mock")
-public class MockController {
+@RequestMapping(value = "/commits")
+public class CommitMineController {
 
-    private final GitHubCommitCollector gitHubCommitCollector;
+    private final MineService mineService;
 
-    public MockController(GitHubCommitCollector gitHubCommitCollector) {
-        this.gitHubCommitCollector = gitHubCommitCollector;
+    public CommitMineController(MineService mineService) {
+        this.mineService = mineService;
     }
 
-    @GetMapping(value = "/commits")
+    @GetMapping(value = "/mine")
     public ResponseEntity<?> getCommits(@RequestBody RepositoryMineRequest request) {
 
-        var commits = gitHubCommitCollector.getCommits(request);
+        var commits = mineService.mineCommits(request);
 
         return ResponseEntity.ok(commits);
     }
