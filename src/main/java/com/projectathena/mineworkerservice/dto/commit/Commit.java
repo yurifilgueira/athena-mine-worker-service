@@ -1,14 +1,16 @@
 package com.projectathena.mineworkerservice.dto.commit;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Date;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public record Commit (
-    Author author,
-    Committer committer,
-    String message,
-    Tree tree,
-    String url,
-    int comment_count,
-    Verification verification
+        String sha,
+        GitActor author,
+        GitActor committer,
+        Boolean authoredByCommitter,
+        String message,
+        String messageBody,
+        String commitUrl,
+        CommitStats commitstats,
+        Date commitedDate,
+        Date pushedDate
 ) {}
