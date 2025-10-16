@@ -1,9 +1,9 @@
-query getCommit($owner: String!, $name: String!) {
+query getCommit($owner: String!, $name: String!, $after: String) {
     repository(owner: $owner, name: $name) {
         defaultBranchRef {
             target {
                 ... on Commit {
-                    history(first: 100) {
+                    history(first: 100, after: $after) {
                         nodes {
                             oid
                             message
@@ -37,6 +37,10 @@ query getCommit($owner: String!, $name: String!) {
                             authoredByCommitter
                             commitUrl
                             committedDate
+                        }
+                        pageInfo {
+                            endCursor
+                            hasNextPage
                         }
                     }
                 }

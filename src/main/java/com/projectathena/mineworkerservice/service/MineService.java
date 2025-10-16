@@ -1,6 +1,6 @@
 package com.projectathena.mineworkerservice.service;
 
-import com.projectathena.mineworkerservice.collectors.GitHubCommitCollector;
+import com.projectathena.mineworkerservice.miners.github.GitHubCommitCollector;
 import com.projectathena.mineworkerservice.dto.commit.Commit;
 import com.projectathena.mineworkerservice.dto.requests.RepositoryMineRequest;
 import org.springframework.stereotype.Service;
