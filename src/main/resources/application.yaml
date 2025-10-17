@@ -12,6 +12,9 @@ spring:
     url: jdbc:postgresql://localhost:5432/mine_job_db
     username: postgres
     password: 3011030216
+  jpa:
+    hibernate:
+      ddl-auto: none
 
 eureka:
   instance:

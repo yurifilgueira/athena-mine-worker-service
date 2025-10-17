@@ -22,25 +22,29 @@ public class JobService {
         return jobRepository.findById(id);
     }
 
-    public Optional<Job> findJobByStatus(JobStatus status) {
-        return jobRepository.findByJobStatus(status);
-    }
-
     @Transactional
     public Optional<Job> findPendingJob() {
         return jobRepository.findFirstByJobStatusOrderByCreatedAtAsc(JobStatus.PENDING);
     }
 
     public void updateJobStatusToMining(Job job) {
-        job.setStatus(JobStatus.MINING);
+        job.setJobStatus(JobStatus.MINING);
         job.setStartedAt(new Date());
 
         jobRepository.save(job);
     }
 
     public void updateJobStatusToCompleted(Job job) {
-        job.setStatus(JobStatus.COMPLETED);
+        job.setJobStatus(JobStatus.COMPLETED);
         job.setFinishedAt(new Date());
+        job.setLastUpdated(new Date());
+
+        jobRepository.save(job);
+    }
+
+    public void updateJobProgress(Job job, String cursor) {
+        job.setLastUpdated(new Date());
+        job.setCursor(cursor);
 
         jobRepository.save(job);
     }

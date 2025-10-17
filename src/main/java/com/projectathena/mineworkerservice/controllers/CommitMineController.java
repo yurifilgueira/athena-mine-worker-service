@@ -18,12 +18,4 @@ public class CommitMineController {
         this.mineService = mineService;
     }
 
-    @GetMapping(value = "/mine")
-    public ResponseEntity<?> getCommits(@RequestBody RepositoryMineRequest request) {
-
-        var commits = mineService.mineCommits(request.projectName(), request.owner());
-
-        return ResponseEntity.ok(commits);
-    }
-
 }

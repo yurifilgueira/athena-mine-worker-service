@@ -24,7 +24,7 @@ public class JobController {
     public ResponseEntity<?> getJobStatus(@PathVariable String id) {
         Optional<Job> job = jobService.findById(id);
         if (job.isPresent()) {
-            return ResponseEntity.ok().body(job.get().getStatus());
+            return ResponseEntity.ok().body(job.get().getJobStatus());
         }else {
             return ResponseEntity.notFound().build();
         }
