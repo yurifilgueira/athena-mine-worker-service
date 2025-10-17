@@ -7,6 +7,11 @@ spring:
   graphql:
     schema:
       locations: "classpath:graphql/**/"
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/mine_job_db
+    username: postgres
+    password: 3011030216
 
 eureka:
   instance:

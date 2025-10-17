@@ -1,4 +1,4 @@
-package com.projectathena.mineworkerservice.dto.requests;
+package com.projectathena.mineworkerservice.model.dto.requests;
 
 import java.time.ZonedDateTime;
 

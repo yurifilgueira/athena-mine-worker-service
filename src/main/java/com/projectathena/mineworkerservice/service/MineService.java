@@ -1,8 +1,8 @@
 package com.projectathena.mineworkerservice.service;
 
 import com.projectathena.mineworkerservice.miners.github.GitHubCommitCollector;
-import com.projectathena.mineworkerservice.dto.commit.Commit;
-import com.projectathena.mineworkerservice.dto.requests.RepositoryMineRequest;
+import com.projectathena.mineworkerservice.model.dto.commit.Commit;
+import com.projectathena.mineworkerservice.model.dto.requests.RepositoryMineRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public class MineService {
         this.gitHubCommitCollector = gitHubCommitCollector;
     }
 
-    public List<Commit> mineCommits(RepositoryMineRequest request){
-        return gitHubCommitCollector.getCommits(request);
+    public List<Commit> mineCommits(String repoName, String repoOwner){
+        return gitHubCommitCollector.getCommits(repoName, repoOwner);
     }
 }

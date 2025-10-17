@@ -1,4 +1,4 @@
-package com.projectathena.mineworkerservice.dto.commit;
+package com.projectathena.mineworkerservice.model.dto.commit;
 
 public record User(
         String id,

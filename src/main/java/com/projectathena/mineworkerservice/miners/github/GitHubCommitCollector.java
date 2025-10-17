@@ -1,8 +1,8 @@
 package com.projectathena.mineworkerservice.miners.github;
 
-import com.projectathena.mineworkerservice.dto.commit.Commit;
-import com.projectathena.mineworkerservice.dto.commit.CommitHistory;
-import com.projectathena.mineworkerservice.dto.requests.RepositoryMineRequest;
+import com.projectathena.mineworkerservice.model.dto.commit.Commit;
+import com.projectathena.mineworkerservice.model.dto.commit.CommitHistory;
+import com.projectathena.mineworkerservice.model.dto.requests.RepositoryMineRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.stereotype.Component;
@@ -24,15 +24,15 @@ public class GitHubCommitCollector {
         this.graphQlClient = HttpGraphQlClient.builder(webClient).build();
     }
 
-    public List<Commit> getCommits(RepositoryMineRequest request) {
+    public List<Commit> getCommits(String repoName, String repoOwner) {
         List<Commit> allCommits = new ArrayList<>();
         String cursor = null;
         boolean hasNextPage;
 
         do {
             CommitHistory historyPage = graphQlClient.documentName("getCommits")
-                    .variable("owner", request.owner())
-                    .variable("name", request.projectName())
+                    .variable("owner", repoOwner)
+                    .variable("name", repoName)
                     .variable("after", cursor)
                     .retrieveSync("repository.defaultBranchRef.target.history")
                     .toEntity(CommitHistory.class);

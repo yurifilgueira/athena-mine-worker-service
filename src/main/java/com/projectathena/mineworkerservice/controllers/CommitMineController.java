@@ -1,6 +1,6 @@
 package com.projectathena.mineworkerservice.controllers;
 
-import com.projectathena.mineworkerservice.dto.requests.RepositoryMineRequest;
+import com.projectathena.mineworkerservice.model.dto.requests.RepositoryMineRequest;
 import com.projectathena.mineworkerservice.service.MineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +21,7 @@ public class CommitMineController {
     @GetMapping(value = "/mine")
     public ResponseEntity<?> getCommits(@RequestBody RepositoryMineRequest request) {
 
-        var commits = mineService.mineCommits(request);
+        var commits = mineService.mineCommits(request.projectName(), request.owner());
 
         return ResponseEntity.ok(commits);
     }
