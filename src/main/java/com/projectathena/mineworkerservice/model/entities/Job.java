@@ -31,6 +31,8 @@ public class Job {
     private String gitRepositoryName;
     @Column(length = 100)
     private String cursor;
+    @Column(length = 100)
+    private String workerId;
 
 
     public String getId() {
@@ -111,6 +113,14 @@ public class Job {
 
     public void setGitRepositoryName(String gitRepositoryName) {
         this.gitRepositoryName = gitRepositoryName;
+    }
+
+    public String getWorkerId() {
+        return workerId;
+    }
+
+    public void setWorkerId(String workerId) {
+        this.workerId = workerId;
     }
 
     @Override

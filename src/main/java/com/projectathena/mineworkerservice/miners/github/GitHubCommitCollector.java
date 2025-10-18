@@ -28,8 +28,9 @@ public class GitHubCommitCollector {
     }
 
     public List<Commit> getCommits(Job job) {
+
         List<Commit> allCommits = new ArrayList<>();
-        String cursor = null;
+        String cursor = job.getCursor();
         boolean hasNextPage;
 
         String repoOwner = job.getGitRepositoryOwner();

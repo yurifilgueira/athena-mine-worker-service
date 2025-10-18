@@ -1,5 +1,6 @@
 package com.projectathena.mineworkerservice.service;
 
+import com.projectathena.mineworkerservice.configs.WorkerIdProvider;
 import com.projectathena.mineworkerservice.model.entities.Job;
 import com.projectathena.mineworkerservice.model.enums.JobStatus;
 import com.projectathena.mineworkerservice.repositories.JobRepository;
@@ -13,9 +14,11 @@ import java.util.Optional;
 public class JobService {
 
     private final JobRepository jobRepository;
+    private final WorkerIdProvider workerIdProvider;
 
-    public JobService(JobRepository jobRepository) {
+    public JobService(JobRepository jobRepository, WorkerIdProvider workerIdProvider) {
         this.jobRepository = jobRepository;
+        this.workerIdProvider = workerIdProvider;
     }
 
     public Optional<Job> findById(String id) {
@@ -30,6 +33,8 @@ public class JobService {
     public void updateJobStatusToMining(Job job) {
         job.setJobStatus(JobStatus.MINING);
         job.setStartedAt(new Date());
+        job.setLastUpdated(new Date());
+        job.setWorkerId(workerIdProvider.getWorkerId());
 
         jobRepository.save(job);
     }
