@@ -13,6 +13,11 @@ spring:
     hibernate:
       ddl-auto: none
 
+#logging:
+#  level:
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.orm.jdbc.bind: TRACE
+
 eureka:
   instance:
     prefer-ip-address: true

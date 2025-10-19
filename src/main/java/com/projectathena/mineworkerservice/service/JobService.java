@@ -1,13 +1,20 @@
 package com.projectathena.mineworkerservice.service;
 
 import com.projectathena.mineworkerservice.configs.WorkerIdProvider;
+import com.projectathena.mineworkerservice.model.dto.requests.JobSubmissionResponse;
+import com.projectathena.mineworkerservice.model.dto.requests.PublishJobRequest;
+import com.projectathena.mineworkerservice.model.dto.responses.JobStatusResponse;
 import com.projectathena.mineworkerservice.model.entities.Job;
 import com.projectathena.mineworkerservice.model.enums.JobStatus;
 import com.projectathena.mineworkerservice.repositories.JobRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -15,14 +22,14 @@ public class JobService {
 
     private final JobRepository jobRepository;
     private final WorkerIdProvider workerIdProvider;
+    private final Logger logger = LoggerFactory.getLogger(JobService.class);
+    @Value(value = "${spring.application.name}")
+    private String applicationName;
+    private final static String BASE_URL_VERIFY_JOB_STATUS = "http://localhost:8080";
 
     public JobService(JobRepository jobRepository, WorkerIdProvider workerIdProvider) {
         this.jobRepository = jobRepository;
         this.workerIdProvider = workerIdProvider;
-    }
-
-    public Optional<Job> findById(String id) {
-        return jobRepository.findById(id);
     }
 
     @Transactional
@@ -52,5 +59,44 @@ public class JobService {
         job.setCursor(cursor);
 
         jobRepository.save(job);
+    }
+
+    public JobSubmissionResponse publishJob(PublishJobRequest request){
+        Job job = new Job();
+        job.setRequestedBy(request.requestedBy());
+        job.setJobStatus(JobStatus.PENDING);
+        job.setCreatedAt(new Date());
+        job.setGitRepositoryOwner(request.gitRepositoryOwner());
+        job.setGitRepositoryName(request.gitRepositoryName());
+
+        var jobEntity =jobRepository.save(job);
+
+        String urlJobStatus = BASE_URL_VERIFY_JOB_STATUS + "/" + applicationName + "/jobs/status/" + jobEntity.getId();
+        return new JobSubmissionResponse(jobEntity.getId(), jobEntity.getJobStatus(), urlJobStatus);
+    }
+
+    public List<Job> findJobsByStatus(JobStatus jobStatus) {
+        return jobRepository.findByJobStatus(jobStatus);
+    }
+
+    public void updateJobToPending(Job job) {
+        job.setJobStatus(JobStatus.PENDING);
+        job.setLastUpdated(new Date());
+        job.setWorkerId(null);
+
+        jobRepository.save(job);
+
+        logger.info("Job updated to PENDING: {}", job.getId());
+    }
+
+    public Optional<Job> findById(String id) {
+        return jobRepository.findById(id);
+    }
+
+    public JobStatusResponse findJobStatusById(String id) {
+        Optional<Job> job = jobRepository.findById(id);
+
+        return job.map(value -> new JobStatusResponse(value.getId(), value.getJobStatus())).orElse(null);
+
     }
 }

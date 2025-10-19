@@ -7,12 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job,String> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Job> findFirstByJobStatusOrderByCreatedAtAsc(JobStatus jobStatus);
-
-    Optional<Job> findByJobStatus(JobStatus jobStatus);
+    List<Job> findByJobStatus(JobStatus jobStatus);
 }

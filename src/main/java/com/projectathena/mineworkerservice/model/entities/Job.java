@@ -34,6 +34,22 @@ public class Job {
     @Column(length = 100)
     private String workerId;
 
+    public Job() {
+    }
+
+    public Job(String id, String requestedBy, JobStatus jobStatus, Date createdAt, Date startedAt, Date finishedAt, Date lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
+        this.id = id;
+        this.requestedBy = requestedBy;
+        this.jobStatus = jobStatus;
+        this.createdAt = createdAt;
+        this.startedAt = startedAt;
+        this.finishedAt = finishedAt;
+        this.lastUpdated = lastUpdated;
+        this.gitRepositoryOwner = gitRepositoryOwner;
+        this.gitRepositoryName = gitRepositoryName;
+        this.cursor = cursor;
+        this.workerId = workerId;
+    }
 
     public String getId() {
         return id;

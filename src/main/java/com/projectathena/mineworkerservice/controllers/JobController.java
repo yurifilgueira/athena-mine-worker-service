@@ -1,14 +1,9 @@
 package com.projectathena.mineworkerservice.controllers;
 
-import com.projectathena.mineworkerservice.model.entities.Job;
+import com.projectathena.mineworkerservice.model.dto.requests.PublishJobRequest;
 import com.projectathena.mineworkerservice.service.JobService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Optional;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/jobs")
@@ -20,11 +15,19 @@ public class JobController {
         this.jobService = jobService;
     }
 
+    @PostMapping(value = "/publish")
+    public ResponseEntity<?> publishJob(@RequestBody PublishJobRequest request){
+
+        var jobSubmissionResponse = jobService.publishJob(request);
+
+        return ResponseEntity.accepted().body(jobSubmissionResponse);
+    }
+
     @GetMapping(value = "/status/{id}")
-    public ResponseEntity<?> getJobStatus(@PathVariable String id) {
-        Optional<Job> job = jobService.findById(id);
-        if (job.isPresent()) {
-            return ResponseEntity.ok().body(job.get().getJobStatus());
+    public ResponseEntity<?> getJobStatus(@PathVariable String id){
+        var job = jobService.findJobStatusById(id);
+        if(job != null){
+            return ResponseEntity.ok().body(job);
         }else {
             return ResponseEntity.notFound().build();
         }
