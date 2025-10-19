@@ -1,12 +1,14 @@
 package com.projectathena.mineworkerservice.service;
 
 import com.projectathena.mineworkerservice.configs.WorkerIdProvider;
-import com.projectathena.mineworkerservice.model.dto.requests.JobSubmissionResponse;
+import com.projectathena.mineworkerservice.model.dto.responses.JobSubmissionResponse;
 import com.projectathena.mineworkerservice.model.dto.requests.PublishJobRequest;
 import com.projectathena.mineworkerservice.model.dto.responses.JobStatusResponse;
 import com.projectathena.mineworkerservice.model.entities.Job;
+import com.projectathena.mineworkerservice.model.entities.User;
 import com.projectathena.mineworkerservice.model.enums.JobStatus;
 import com.projectathena.mineworkerservice.repositories.JobRepository;
+import com.projectathena.mineworkerservice.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,15 +23,17 @@ import java.util.Optional;
 public class JobService {
 
     private final JobRepository jobRepository;
+    private final UserRepository userRepository;
     private final WorkerIdProvider workerIdProvider;
     private final Logger logger = LoggerFactory.getLogger(JobService.class);
     @Value(value = "${spring.application.name}")
     private String applicationName;
     private final static String BASE_URL_VERIFY_JOB_STATUS = "http://localhost:8080";
 
-    public JobService(JobRepository jobRepository, WorkerIdProvider workerIdProvider) {
+    public JobService(JobRepository jobRepository, WorkerIdProvider workerIdProvider, UserRepository userRepository) {
         this.jobRepository = jobRepository;
         this.workerIdProvider = workerIdProvider;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -62,8 +66,23 @@ public class JobService {
     }
 
     public JobSubmissionResponse publishJob(PublishJobRequest request){
+
+        User user = userRepository.findByEmail(request.userEmail())
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setName(request.userName());
+                    newUser.setEmail(request.userEmail());
+                    return userRepository.save(newUser);
+                });
+
+        if (user == null) {
+            while (true) {
+                logger.error("User is null");
+            }
+        }
+
         Job job = new Job();
-        job.setRequestedBy(request.requestedBy());
+        job.setRequestedBy(user);
         job.setJobStatus(JobStatus.PENDING);
         job.setCreatedAt(new Date());
         job.setGitRepositoryOwner(request.gitRepositoryOwner());

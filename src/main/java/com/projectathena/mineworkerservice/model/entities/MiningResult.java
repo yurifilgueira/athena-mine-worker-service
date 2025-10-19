@@ -6,9 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Representa o resultado de uma mineração do GitHub (atualizado incrementalmente a cada página)
- */
 @Table(name = "mining_results")
 @Entity
 public class MiningResult {

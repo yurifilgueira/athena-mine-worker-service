@@ -1,4 +1,4 @@
-package com.projectathena.mineworkerservice.model.dto.requests;
+package com.projectathena.mineworkerservice.model.dto.responses;
 
 import com.projectathena.mineworkerservice.model.enums.JobStatus;
 

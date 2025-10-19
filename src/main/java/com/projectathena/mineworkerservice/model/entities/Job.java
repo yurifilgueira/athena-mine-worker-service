@@ -12,8 +12,9 @@ public class Job {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @Column(length = 200, nullable = false)
-    private String requestedBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requested_by_user_id")
+    private User requestedBy;
     @Enumerated(EnumType.STRING)
     @Column(length = 80, nullable = false)
     private JobStatus jobStatus;
@@ -37,7 +38,7 @@ public class Job {
     public Job() {
     }
 
-    public Job(String id, String requestedBy, JobStatus jobStatus, Date createdAt, Date startedAt, Date finishedAt, Date lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
+    public Job(String id, User requestedBy, JobStatus jobStatus, Date createdAt, Date startedAt, Date finishedAt, Date lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
         this.id = id;
         this.requestedBy = requestedBy;
         this.jobStatus = jobStatus;
@@ -59,11 +60,11 @@ public class Job {
         this.id = id;
     }
 
-    public String getRequestedBy() {
+    public User getRequestedBy() {
         return requestedBy;
     }
 
-    public void setRequestedBy(String requestedBy) {
+    public void setRequestedBy(User requestedBy) {
         this.requestedBy = requestedBy;
     }
 
