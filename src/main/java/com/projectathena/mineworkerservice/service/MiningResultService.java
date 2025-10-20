@@ -32,12 +32,11 @@ public class MiningResultService {
     private final MiningResultRepository miningResultRepository;
     private final MiningCommitRepository miningCommitRepository;
     private final GitAuthorRepository gitAuthorRepository;
-    private final TransactionalOperator transactionalOperator; // Necessário para transação reativa
+    private final TransactionalOperator transactionalOperator;
 
     public MiningResultService(MiningResultRepository miningResultRepository,
                                MiningCommitRepository miningCommitRepository,
                                GitAuthorRepository gitAuthorRepository,
-                               // Injetar o TransactionalOperator
                                TransactionalOperator transactionalOperator) {
         this.miningResultRepository = miningResultRepository;
         this.miningCommitRepository = miningCommitRepository;
@@ -124,7 +123,7 @@ public class MiningResultService {
                     miningResult.setLastUpdatedAt(Instant.now());
                     return miningResultRepository.save(miningResult);
                 })
-                .as(transactionalOperator::transactional) // Aplica a transação a todo o fluxo
+                .as(transactionalOperator::transactional)
                 .then();
     }
 
@@ -170,7 +169,53 @@ public class MiningResultService {
         }
     }
 
-    public Mono<MiningResult> findForUserAndRepository(MiningResultRequest request) {
-        return miningResultRepository.findByJobUserAndRepository(request.userEmail(), request.gitRepositoryOwner(), request.gitRepositoryName());
+    private Mono<MiningCommit> fetchAuthorAndCommitter(MiningCommit commit) {
+        if (commit.getAuthor() != null && commit.getCommitter() != null) {
+            return Mono.just(commit);
+        }
+
+        Mono<GitAuthor> authorMono = commit.getAuthorId() != null
+                ? gitAuthorRepository.findById(commit.getAuthorId()).switchIfEmpty(Mono.empty())
+                : Mono.empty();
+
+        Mono<GitAuthor> committerMono = commit.getCommitterId() != null
+                ? gitAuthorRepository.findById(commit.getCommitterId()).switchIfEmpty(Mono.empty())
+                : Mono.empty();
+
+        return Mono.zip(authorMono, committerMono)
+                .map(tuple -> {
+                    commit.setAuthor(tuple.getT1());
+                    commit.setCommitter(tuple.getT2());
+                    return commit;
+                });
     }
+
+    public Mono<MiningResult> findForUserAndRepository(MiningResultRequest request) {
+
+        Mono<MiningResult> miningResultMono = miningResultRepository.findByJobUserAndRepository(
+                request.userEmail(),
+                request.gitRepositoryOwner(),
+                request.gitRepositoryName()
+        );
+
+        return miningResultMono
+                .flatMap(result -> {
+                    UUID resultId = result.getId();
+
+                    Flux<MiningCommit> commitsFlux = miningCommitRepository.findByMiningResultId(resultId);
+
+                    Flux<MiningCommit> enrichedCommitsFlux = commitsFlux.flatMap(this::fetchAuthorAndCommitter);
+
+                    return Mono.just(result)
+                            .zipWith(enrichedCommitsFlux.collectList())
+                            .map(tuple -> {
+                                MiningResult completeResult = tuple.getT1();
+                                List<MiningCommit> commits = tuple.getT2();
+
+                                completeResult.setCommits(commits);
+                                return completeResult;
+                            });
+                });
+    }
+
 }

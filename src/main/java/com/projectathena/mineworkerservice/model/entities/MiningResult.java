@@ -124,6 +124,10 @@ public class MiningResult implements Serializable {
         this.lastCursor = lastCursor;
     }
 
+    public void addCommits(MiningCommit miningCommit) {
+        commits.add(miningCommit);
+    }
+
     public List<MiningCommit> getCommits() {
         return commits;
     }

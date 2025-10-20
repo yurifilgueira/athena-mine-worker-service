@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS mining_results (
 
 CREATE TABLE IF NOT EXISTS git_authors (
                                            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    avatar_url VARCHAR(255),
+    avatar_url TEXT,
     date TIMESTAMP WITHOUT TIME ZONE,
     email VARCHAR(255),
     name VARCHAR(255),
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS git_authors (
 CREATE TABLE IF NOT EXISTS mining_commits (
                                               id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     mining_result_id UUID,
-    oid VARCHAR(255) UNIQUE,
+    oid VARCHAR(255),
     message TEXT,
     message_body TEXT,
     additions INTEGER,
