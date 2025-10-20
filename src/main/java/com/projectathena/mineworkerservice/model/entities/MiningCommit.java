@@ -1,13 +1,20 @@
 package com.projectathena.mineworkerservice.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
 
 @Table(name = "mining_commits")
 @Entity
-public class MiningCommit {
+public class MiningCommit implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -15,6 +22,7 @@ public class MiningCommit {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mining_result_id", nullable = false)
+    @JsonBackReference
     private MiningResult miningResult;
     
     @Column(nullable = false, columnDefinition = "TEXT")

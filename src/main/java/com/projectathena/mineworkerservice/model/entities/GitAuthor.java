@@ -1,12 +1,18 @@
 package com.projectathena.mineworkerservice.model.entities;
 
 import jakarta.persistence.*;
+
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
 @Table(name = "git_authors")
 @Entity
-public class GitAuthor {
+public class GitAuthor implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -2,6 +2,7 @@ package com.projectathena.mineworkerservice.service;
 
 import com.projectathena.mineworkerservice.model.dto.commit.Commit;
 import com.projectathena.mineworkerservice.model.dto.commit.GitActor;
+import com.projectathena.mineworkerservice.model.dto.requests.MiningResultRequest;
 import com.projectathena.mineworkerservice.model.entities.GitAuthor;
 import com.projectathena.mineworkerservice.model.entities.Job;
 import com.projectathena.mineworkerservice.model.entities.MiningCommit;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class MiningResultService {
@@ -135,5 +137,9 @@ public class MiningResultService {
         }
 
         return gitAuthorRepository.save(newAuthor);
+    }
+
+    public Optional<MiningResult> findForUserAndRepository(MiningResultRequest request) {
+        return miningResultRepository.findForUserAndRepository(request.userEmail(), request.gitRepositoryOwner(), request.gitRepositoryName());
     }
 }

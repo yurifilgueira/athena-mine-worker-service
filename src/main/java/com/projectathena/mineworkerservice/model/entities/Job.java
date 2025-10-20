@@ -2,12 +2,18 @@ package com.projectathena.mineworkerservice.model.entities;
 
 import com.projectathena.mineworkerservice.model.enums.JobStatus;
 import jakarta.persistence.*;
+
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
 @Entity
 @Table(name = "jobs")
-public class Job {
+public class Job implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
