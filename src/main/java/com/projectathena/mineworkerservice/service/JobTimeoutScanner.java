@@ -2,41 +2,56 @@ package com.projectathena.mineworkerservice.service;
 
 import com.projectathena.mineworkerservice.model.entities.Job;
 import com.projectathena.mineworkerservice.model.enums.JobStatus;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 
 @Service
 public class JobTimeoutScanner {
 
     private final JobService jobService;
-    private final Logger logger = org.slf4j.LoggerFactory.getLogger(JobTimeoutScanner.class);
+    private final TransactionalOperator transactionalOperator;
+    private final Logger logger = LoggerFactory.getLogger(JobTimeoutScanner.class);
 
-    public JobTimeoutScanner(JobService jobService) {
+    public JobTimeoutScanner(JobService jobService, TransactionalOperator transactionalOperator) {
         this.jobService = jobService;
+        this.transactionalOperator = transactionalOperator;
     }
 
-    @Scheduled(fixedRate = 30000)
-    @Transactional
-    public void scan() {
-        List<Job> jobs = jobService.findJobsByStatus(JobStatus.MINING);
-
-        for (Job job : jobs) {
-            Instant jobLastUpdatedAt = job.getLastUpdated().toInstant();
-            Instant now = Instant.now();
-            Duration duration = Duration.between(jobLastUpdatedAt, now);
-
-            if (duration.toSeconds() > 60) {
-                logger.warn("Job Timeout: {}", job.getId());
-                logger.info("Job Update Status: {} to {}", job.getJobStatus(), JobStatus.PENDING);
-                jobService.updateJobToPending(job);
-            }
-        }
+    @PostConstruct
+    public void startScanning() {
+        Flux.interval(Duration.ofSeconds(30))
+                .flatMap(tick -> scanAndResetTimedOutJobs())
+                .subscribe(
+                        null,
+                        error -> logger.error("An error occurred in the JobTimeoutScanner pipeline.", error)
+                );
     }
 
+    private Mono<Void> scanAndResetTimedOutJobs() {
+        return jobService.findJobsByStatus(JobStatus.MINING)
+                .filter(job -> {
+                    if (job.getLastUpdated() == null) return false;
+                    Duration duration = Duration.between(job.getLastUpdated(), Instant.now());
+                    return duration.toSeconds() > 60;
+                })
+                .flatMap(this::resetJobToPending)
+                .then();
+    }
+
+
+    private Mono<Void> resetJobToPending(Job job) {
+        logger.warn("Job Timeout detected for job: {}", job.getId());
+        logger.info("Resetting job status to PENDING");
+
+        return jobService.updateJobToPending(job)
+                .as(transactionalOperator::transactional);
+    }
 }

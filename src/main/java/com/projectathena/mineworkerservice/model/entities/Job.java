@@ -1,14 +1,17 @@
 package com.projectathena.mineworkerservice.model.entities;
 
 import com.projectathena.mineworkerservice.model.enums.JobStatus;
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
-@Entity
 @Table(name = "jobs")
 public class Job implements Serializable {
 
@@ -16,35 +19,34 @@ public class Job implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requested_by_user_id")
+    private UUID id;
+    @Transient
     private User requestedBy;
-    @Enumerated(EnumType.STRING)
-    @Column(length = 80, nullable = false)
+    @Column("requested_by_id")
+    private UUID requestedById;
+    @Column
     private JobStatus jobStatus;
-    @Column(length = 100, nullable = false)
-    private Date createdAt;
-    @Column(length = 100)
-    private Date startedAt;
-    @Column(length = 100)
-    private Date finishedAt;
-    @Column(length = 100)
-    private Date lastUpdated;
-    @Column(length = 100, nullable = false)
+    @Column
+    private Instant createdAt;
+    @Column
+    private Instant startedAt;
+    @Column
+    private Instant finishedAt;
+    @Column
+    private Instant lastUpdated;
+    @Column
     private String gitRepositoryOwner;
-    @Column(length = 100, nullable = false)
+    @Column
     private String gitRepositoryName;
-    @Column(length = 100)
+    @Column
     private String cursor;
-    @Column(length = 100)
+    @Column
     private String workerId;
 
     public Job() {
     }
 
-    public Job(String id, User requestedBy, JobStatus jobStatus, Date createdAt, Date startedAt, Date finishedAt, Date lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
+    public Job(UUID id, User requestedBy, JobStatus jobStatus, Instant createdAt, Instant startedAt, Instant finishedAt, Instant lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
         this.id = id;
         this.requestedBy = requestedBy;
         this.jobStatus = jobStatus;
@@ -58,11 +60,11 @@ public class Job implements Serializable {
         this.workerId = workerId;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -82,35 +84,35 @@ public class Job implements Serializable {
         this.jobStatus = jobStatus;
     }
 
-    public Date getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getStartedAt() {
+    public Instant getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(Date startedAt) {
+    public void setStartedAt(Instant startedAt) {
         this.startedAt = startedAt;
     }
 
-    public Date getFinishedAt() {
+    public Instant getFinishedAt() {
         return finishedAt;
     }
 
-    public void setFinishedAt(Date finishedAt) {
+    public void setFinishedAt(Instant finishedAt) {
         this.finishedAt = finishedAt;
     }
 
-    public Date getLastUpdated() {
+    public Instant getLastUpdated() {
         return lastUpdated;
     }
 
-    public void setLastUpdated(Date lastUpdated) {
+    public void setLastUpdated(Instant lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 
@@ -144,6 +146,14 @@ public class Job implements Serializable {
 
     public void setWorkerId(String workerId) {
         this.workerId = workerId;
+    }
+
+    public UUID getRequestedById() {
+        return requestedById;
+    }
+
+    public void setRequestedById(UUID requestedById) {
+        this.requestedById = requestedById;
     }
 
     @Override

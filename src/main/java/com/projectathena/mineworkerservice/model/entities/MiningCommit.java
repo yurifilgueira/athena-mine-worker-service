@@ -1,37 +1,45 @@
 package com.projectathena.mineworkerservice.model.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 
 @Table(name = "mining_commits")
-@Entity
-public class MiningCommit implements Serializable {
+public class MiningCommit implements Serializable{
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mining_result_id", nullable = false)
-    @JsonBackReference
+    private UUID id;
+
+    @Transient
     private MiningResult miningResult;
-    
-    @Column(nullable = false, columnDefinition = "TEXT")
+
+    @Column("mining_result_id")
+    private UUID miningResultId;
+
+    @Column("author_id")
+    private UUID authorId;
+
+    @Column("committer_id")
+    private UUID committerId;
+
+    @Column
     private String oid;
     
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String message;
     
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String messageBody;
     
     @Column
@@ -40,31 +48,29 @@ public class MiningCommit implements Serializable {
     @Column
     private Integer deletions;
     
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "author_id")
+    @Transient
     private GitAuthor author;
     
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "committer_id")
+    @Transient
     private GitAuthor committer;
     
     @Column
     private Boolean authoredByCommitter;
     
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String commitUrl;
     
-    @Column(nullable = false)
-    private Date committedDate;
+    @Column
+    private Instant committedDate;
 
     public MiningCommit() {
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -74,6 +80,56 @@ public class MiningCommit implements Serializable {
 
     public void setMiningResult(MiningResult miningResult) {
         this.miningResult = miningResult;
+        if (miningResult != null) {
+            this.miningResultId = miningResult.getId();
+        }
+    }
+
+    public GitAuthor getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(GitAuthor author) {
+        this.author = author;
+        if (author != null) {
+            this.authorId = author.getId();
+        }
+    }
+
+    public GitAuthor getCommitter() {
+        return committer;
+
+    }
+
+    public void setCommitter(GitAuthor committer) {
+        this.committer = committer;
+        if (committer != null) {
+            this.committerId = committer.getId();
+        }
+    }
+
+    public UUID getMiningResultId() {
+        return miningResultId;
+    }
+
+    public void setMiningResultId(UUID miningResultId) {
+        this.miningResultId = miningResultId;
+    }
+
+    public UUID getAuthorId() {
+        return authorId;
+    }
+
+    public void setAuthorId(UUID authorId) {
+        this.authorId = authorId;
+    }
+
+    public UUID getCommitterId() {
+        return committerId;
+    }
+
+    public void setCommitterId(UUID committerId) {
+        this.committerId = committerId;
     }
 
     public String getOid() {
@@ -116,22 +172,6 @@ public class MiningCommit implements Serializable {
         this.deletions = deletions;
     }
 
-    public GitAuthor getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(GitAuthor author) {
-        this.author = author;
-    }
-
-    public GitAuthor getCommitter() {
-        return committer;
-    }
-
-    public void setCommitter(GitAuthor committer) {
-        this.committer = committer;
-    }
-
     public Boolean getAuthoredByCommitter() {
         return authoredByCommitter;
     }
@@ -148,11 +188,11 @@ public class MiningCommit implements Serializable {
         this.commitUrl = commitUrl;
     }
 
-    public Date getCommittedDate() {
+    public Instant getCommittedDate() {
         return committedDate;
     }
 
-    public void setCommittedDate(Date committedDate) {
+    public void setCommittedDate(Instant committedDate) {
         this.committedDate = committedDate;
     }
 
@@ -160,11 +200,11 @@ public class MiningCommit implements Serializable {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         MiningCommit that = (MiningCommit) o;
-        return Objects.equals(oid, that.oid);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(oid);
+        return Objects.hashCode(id);
     }
 }

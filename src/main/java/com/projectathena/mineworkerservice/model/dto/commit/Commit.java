@@ -1,5 +1,6 @@
 package com.projectathena.mineworkerservice.model.dto.commit;
 
+import java.time.Instant;
 import java.util.Date;
 
 public record Commit (
@@ -12,5 +13,5 @@ public record Commit (
         String commitUrl,
         int additions,
         int deletions,
-        Date committedDate
+        Instant committedDate
 ) {}

@@ -1,9 +1,14 @@
 package com.projectathena.mineworkerservice.controllers;
 
 import com.projectathena.mineworkerservice.model.dto.requests.PublishJobRequest;
+import com.projectathena.mineworkerservice.model.dto.responses.JobStatusResponse;
+import com.projectathena.mineworkerservice.model.dto.responses.JobSubmissionResponse;
 import com.projectathena.mineworkerservice.service.JobService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "/jobs")
@@ -16,21 +21,16 @@ public class JobController {
     }
 
     @PostMapping(value = "/publish")
-    public ResponseEntity<?> publishJob(@RequestBody PublishJobRequest request){
-
-        var jobSubmissionResponse = jobService.publishJob(request);
-
-        return ResponseEntity.accepted().body(jobSubmissionResponse);
+    public Mono<ResponseEntity<JobSubmissionResponse>> publishJob(@RequestBody Mono<PublishJobRequest> request) {
+        return request
+                .flatMap(jobService::publishJob)
+                .map(response -> ResponseEntity.accepted().body(response));
     }
 
     @GetMapping(value = "/status/{id}")
-    public ResponseEntity<?> getJobStatus(@PathVariable String id){
-        var job = jobService.findJobStatusById(id);
-        if(job != null){
-            return ResponseEntity.ok().body(job);
-        }else {
-            return ResponseEntity.notFound().build();
-        }
+    public Mono<ResponseEntity<JobStatusResponse>> getJobStatus(@PathVariable UUID id) {
+        return jobService.findJobStatusById(id)
+                .map(jobStatus -> ResponseEntity.ok().body(jobStatus))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
-
 }

@@ -1,14 +1,17 @@
 package com.projectathena.mineworkerservice.model.entities;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
-@Entity
 @Table(name = "users")
 public class User implements Serializable {
 
@@ -16,30 +19,29 @@ public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
-    @Column(nullable = false)
+    @Column
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column
     private String email;
 
-    @OneToMany(mappedBy = "requestedBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Transient
     private List<Job> jobs = new ArrayList<>();
 
     public User() {
     }
 
-    public User(String id, String name, String email, List<Job> jobs) {
+    public User(UUID id, String name, String email, List<Job> jobs) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.jobs = jobs;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

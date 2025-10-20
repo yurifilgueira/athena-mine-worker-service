@@ -1,8 +1,8 @@
 package com.projectathena.mineworkerservice.service;
 
 import com.projectathena.mineworkerservice.configs.WorkerIdProvider;
-import com.projectathena.mineworkerservice.model.dto.responses.JobSubmissionResponse;
 import com.projectathena.mineworkerservice.model.dto.requests.PublishJobRequest;
+import com.projectathena.mineworkerservice.model.dto.responses.JobSubmissionResponse;
 import com.projectathena.mineworkerservice.model.dto.responses.JobStatusResponse;
 import com.projectathena.mineworkerservice.model.entities.Job;
 import com.projectathena.mineworkerservice.model.entities.User;
@@ -13,11 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class JobService {
@@ -29,93 +30,85 @@ public class JobService {
     @Value(value = "${spring.application.name}")
     private String applicationName;
     private final static String BASE_URL_VERIFY_JOB_STATUS = "http://localhost:8080";
+    private final TransactionalOperator transactionalOperator;
 
-    public JobService(JobRepository jobRepository, WorkerIdProvider workerIdProvider, UserRepository userRepository) {
+    public JobService(JobRepository jobRepository, WorkerIdProvider workerIdProvider, UserRepository userRepository, TransactionalOperator transactionalOperator) {
         this.jobRepository = jobRepository;
         this.workerIdProvider = workerIdProvider;
         this.userRepository = userRepository;
+        this.transactionalOperator = transactionalOperator;
     }
 
-    @Transactional
-    public Optional<Job> findPendingJob() {
-        return jobRepository.findFirstByJobStatusOrderByCreatedAtAsc(JobStatus.PENDING);
+    public Mono<Job> findPendingJob() {
+        return jobRepository.findFirstByJobStatusOrderByCreatedAtAsc(JobStatus.PENDING)
+                .as(transactionalOperator::transactional);
     }
 
-    public void updateJobStatusToMining(Job job) {
+    public Mono<Void> updateJobStatusToMining(Job job) {
         job.setJobStatus(JobStatus.MINING);
-        job.setStartedAt(new Date());
-        job.setLastUpdated(new Date());
+        job.setStartedAt(Instant.now());
+        job.setLastUpdated(Instant.now());
         job.setWorkerId(workerIdProvider.getWorkerId());
-
-        jobRepository.save(job);
+        return jobRepository.save(job).then();
     }
 
-    public void updateJobStatusToCompleted(Job job) {
+    public Mono<Void> updateJobStatusToCompleted(Job job) {
         job.setJobStatus(JobStatus.COMPLETED);
-        job.setFinishedAt(new Date());
-        job.setLastUpdated(new Date());
-
-        jobRepository.save(job);
+        job.setFinishedAt(Instant.now());
+        job.setLastUpdated(Instant.now());
+        return jobRepository.save(job).then();
     }
 
-    public void updateJobProgress(Job job, String cursor) {
-        job.setLastUpdated(new Date());
+    public Mono<Void> updateJobProgress(Job job, String cursor) {
+        job.setLastUpdated(Instant.now());
         job.setCursor(cursor);
-
-        jobRepository.save(job);
+        return jobRepository.save(job).then();
     }
 
-    public JobSubmissionResponse publishJob(PublishJobRequest request){
-
-        User user = userRepository.findByEmail(request.userEmail())
-                .orElseGet(() -> {
+    public Mono<JobSubmissionResponse> publishJob(PublishJobRequest request) {
+        Mono<User> userMono = userRepository.findByEmail(request.userEmail())
+                .switchIfEmpty(Mono.defer(() -> {
                     User newUser = new User();
                     newUser.setName(request.userName());
                     newUser.setEmail(request.userEmail());
                     return userRepository.save(newUser);
-                });
+                }));
 
-        if (user == null) {
-            while (true) {
-                logger.error("User is null");
-            }
-        }
-
-        Job job = new Job();
-        job.setRequestedBy(user);
-        job.setJobStatus(JobStatus.PENDING);
-        job.setCreatedAt(new Date());
-        job.setGitRepositoryOwner(request.gitRepositoryOwner());
-        job.setGitRepositoryName(request.gitRepositoryName());
-
-        var jobEntity =jobRepository.save(job);
-
-        String urlJobStatus = BASE_URL_VERIFY_JOB_STATUS + "/" + applicationName + "/jobs/status/" + jobEntity.getId();
-        return new JobSubmissionResponse(jobEntity.getId(), jobEntity.getJobStatus(), urlJobStatus);
+        return userMono.flatMap(user -> {
+            Job job = new Job();
+            job.setRequestedBy(user);
+            job.setRequestedById(user.getId());
+            job.setJobStatus(JobStatus.PENDING);
+            job.setCreatedAt(Instant.now());
+            job.setGitRepositoryOwner(request.gitRepositoryOwner());
+            job.setGitRepositoryName(request.gitRepositoryName());
+            return jobRepository.save(job);
+        }).map(savedJob -> {
+            String urlJobStatus = BASE_URL_VERIFY_JOB_STATUS + "/" + applicationName + "/jobs/status/" + savedJob.getId();
+            return new JobSubmissionResponse(savedJob.getId(), savedJob.getJobStatus(), urlJobStatus);
+        }).as(transactionalOperator::transactional);
     }
 
-    public List<Job> findJobsByStatus(JobStatus jobStatus) {
+    public Flux<Job> findJobsByStatus(JobStatus jobStatus) {
         return jobRepository.findByJobStatus(jobStatus);
     }
 
-    public void updateJobToPending(Job job) {
+    public Mono<Void> updateJobToPending(Job job) {
         job.setJobStatus(JobStatus.PENDING);
-        job.setLastUpdated(new Date());
+        job.setLastUpdated(Instant.now());
         job.setWorkerId(null);
 
-        jobRepository.save(job);
-
-        logger.info("Job updated to PENDING: {}", job.getId());
+        return jobRepository.save(job)
+                .doOnSuccess(savedJob -> logger.info("Job updated to PENDING: {}", savedJob.getId()))
+                .then();
     }
 
-    public Optional<Job> findById(String id) {
+    public Mono<Job> findById(UUID id) {
         return jobRepository.findById(id);
     }
 
-    public JobStatusResponse findJobStatusById(String id) {
-        Optional<Job> job = jobRepository.findById(id);
-
-        return job.map(value -> new JobStatusResponse(value.getId(), value.getJobStatus())).orElse(null);
-
+    public Mono<JobStatusResponse> findJobStatusById(UUID id) {
+        return jobRepository.findById(id)
+                .map(job -> new JobStatusResponse(job.getId(), job.getJobStatus()));
     }
 }

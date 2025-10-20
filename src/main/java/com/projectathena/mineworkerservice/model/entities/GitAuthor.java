@@ -1,28 +1,29 @@
 package com.projectathena.mineworkerservice.model.entities;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 @Table(name = "git_authors")
-@Entity
 public class GitAuthor implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
     
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String avatarUrl;
     
     @Column
-    private Date date;
+    private Instant date;
     
     @Column
     private String email;
@@ -31,7 +32,7 @@ public class GitAuthor implements Serializable {
     private String name;
     
     @Column
-    private String userId;
+    private UUID userId;
     
     @Column
     private String login;
@@ -39,11 +40,11 @@ public class GitAuthor implements Serializable {
     public GitAuthor() {
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -55,11 +56,11 @@ public class GitAuthor implements Serializable {
         this.avatarUrl = avatarUrl;
     }
 
-    public Date getDate() {
+    public Instant getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(Instant date) {
         this.date = date;
     }
 
@@ -79,11 +80,11 @@ public class GitAuthor implements Serializable {
         this.name = name;
     }
 
-    public String getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(UUID userId) {
         this.userId = userId;
     }
 

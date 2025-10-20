@@ -1,12 +1,13 @@
 package com.projectathena.mineworkerservice.repositories;
 
 import com.projectathena.mineworkerservice.model.entities.User;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, String> {
-    Optional<User> findByEmail(String email);
+public interface UserRepository extends ReactiveCrudRepository<User, UUID> {
+    Mono<User> findByEmail(String email);
 }

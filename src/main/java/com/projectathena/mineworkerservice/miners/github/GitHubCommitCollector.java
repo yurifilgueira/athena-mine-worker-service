@@ -1,6 +1,5 @@
 package com.projectathena.mineworkerservice.miners.github;
 
-import com.projectathena.mineworkerservice.model.dto.commit.Commit;
 import com.projectathena.mineworkerservice.model.dto.commit.CommitHistory;
 import com.projectathena.mineworkerservice.model.entities.Job;
 import com.projectathena.mineworkerservice.service.JobService;
@@ -10,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,44 +34,41 @@ public class GitHubCommitCollector {
         this.miningResultService = miningResultService;
     }
 
-    public List<Commit> getCommits(Job job) {
-        List<Commit> allCommits = new ArrayList<>();
-        String cursor = job.getCursor();
-        boolean hasNextPage;
-
+    public Mono<Void> getCommits(Job job) {
         String repoOwner = job.getGitRepositoryOwner();
         String repoName = job.getGitRepositoryName();
 
-        do {
-            logger.info("Mining GitHub commits for {}/{} with cursor: {}", repoOwner, repoName, cursor);
+        return fetchPage(repoOwner, repoName, job.getCursor())
+                .expand(historyPage -> {
+                    if (historyPage.pageInfo().hasNextPage()) {
+                        logger.debug("Expanding to next page with cursor: {}", historyPage.pageInfo().endCursor());
+                        return fetchPage(repoOwner, repoName, historyPage.pageInfo().endCursor());
+                    } else {
+                        return Mono.empty();
+                    }
+                })
+                .flatMap(historyPage -> processAndSavePage(job, historyPage).thenReturn(historyPage))
 
-            CommitHistory historyPage = graphQlClient.documentName("getCommits")
-                    .variable("owner", repoOwner)
-                    .variable("name", repoName)
-                    .variable("after", cursor)
-                    .retrieveSync("repository.defaultBranchRef.target.history")
-                    .toEntity(CommitHistory.class);
+                .then(miningResultService.completeMiningResult(job));
+    }
 
-            if (historyPage != null && historyPage.nodes() != null) {
-                List<Commit> pageCommits = historyPage.nodes();
-                allCommits.addAll(pageCommits);
+    private Mono<CommitHistory> fetchPage(String owner, String name, String cursor) {
+        logger.debug("Executing GraphQL query for {}/{} with cursor: {}", owner, name, cursor);
 
-                miningResultService.saveCommitPage(job, pageCommits, historyPage.pageInfo().endCursor());
+        return graphQlClient.documentName("getCommits")
+                .variable("owner", owner)
+                .variable("name", name)
+                .variable("after", cursor)
+                .retrieve("repository.defaultBranchRef.target.history")
+                .toEntity(CommitHistory.class);
+    }
 
-                hasNextPage = historyPage.pageInfo().hasNextPage();
-                cursor = historyPage.pageInfo().endCursor();
-            } else {
-                hasNextPage = false;
-            }
+    private Mono<Void> processAndSavePage(Job job, CommitHistory historyPage) {
+        if (historyPage == null || historyPage.nodes() == null || historyPage.nodes().isEmpty()) {
+            return Mono.empty();
+        }
 
-            if (hasNextPage) {
-                jobService.updateJobProgress(job, historyPage.pageInfo().endCursor());
-            }
-
-        } while (hasNextPage);
-
-        miningResultService.completeMiningResult(job);
-
-        return allCommits;
+        return miningResultService.saveCommitPage(job, historyPage.nodes(), historyPage.pageInfo().endCursor())
+                .then(jobService.updateJobProgress(job, historyPage.pageInfo().endCursor()));
     }
 }

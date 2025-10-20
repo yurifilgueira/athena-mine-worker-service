@@ -1,71 +1,70 @@
 package com.projectathena.mineworkerservice.model.entities;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.projectathena.mineworkerservice.model.enums.MiningStatus;
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Table(name = "mining_results")
-@Entity
 public class MiningResult implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    
-    @Column(nullable = false, unique = true)
-    private String jobId;
-    
-    @Column(nullable = false)
-    private String repositoryOwner;
-    
-    @Column(nullable = false)
-    private String repositoryName;
-    
-    @Column(nullable = false)
-    private Date startedAt;
+    private UUID id;
     
     @Column
-    private Date lastUpdatedAt;
+    private UUID jobId;
+    
+    @Column
+    private String repositoryOwner;
+    
+    @Column
+    private String repositoryName;
+    
+    @Column
+    private Instant startedAt;
+    
+    @Column
+    private Instant lastUpdatedAt;
     
     @Column
     private Integer totalCommits;
     
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column
     private MiningStatus status;
     
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String lastCursor;
     
-    @OneToMany(mappedBy = "miningResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @Transient
     private List<MiningCommit> commits;
 
     public MiningResult() {
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public String getJobId() {
+    public UUID getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    public void setJobId(UUID jobId) {
         this.jobId = jobId;
     }
 
@@ -85,19 +84,19 @@ public class MiningResult implements Serializable {
         this.repositoryName = repositoryName;
     }
 
-    public Date getStartedAt() {
+    public Instant getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(Date startedAt) {
+    public void setStartedAt(Instant startedAt) {
         this.startedAt = startedAt;
     }
 
-    public Date getLastUpdatedAt() {
+    public Instant getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
-    public void setLastUpdatedAt(Date lastUpdatedAt) {
+    public void setLastUpdatedAt(Instant lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 

@@ -4,15 +4,13 @@ spring:
   graphql:
     schema:
       locations: "classpath:graphql/**/"
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/mine_job_db
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/reactive_mine_job_db
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: update
-
+  sql:
+    init:
+      mode: always
 #logging:
 #  level:
 #    org.hibernate.SQL: DEBUG

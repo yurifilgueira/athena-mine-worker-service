@@ -1,40 +1,40 @@
 package com.projectathena.mineworkerservice.service;
 
-import com.projectathena.mineworkerservice.model.entities.Job;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.time.Duration;
 
 @Component
 public class JobScanner {
 
     private final JobService jobService;
     private final MineService mineService;
-    private final ExecutorService executorService;
-    private final Logger logger = org.slf4j.LoggerFactory.getLogger(JobScanner.class);
+    private final Logger logger = LoggerFactory.getLogger(JobScanner.class);
 
     public JobScanner(JobService jobService, MineService mineService) {
         this.jobService = jobService;
         this.mineService = mineService;
-        this.executorService = Executors.newFixedThreadPool(10);
     }
 
-    @Scheduled(fixedRate = 5000)
-    public void scan() {
-        executorService.submit(() -> {
-            Optional<Job> job = jobService.findPendingJob();
-            job.ifPresent(value -> {
-                jobService.updateJobStatusToMining(value);
-                logger.info("Initiating job: {}", value.getId());
-                mineService.mineCommits(job.get());
-                logger.info("Finishing job: {}", value.getId());
-                jobService.updateJobStatusToCompleted(value);
-            });
-        });
+    @PostConstruct
+    public void startScanning() {
+        Flux.interval(Duration.ofSeconds(5))
+                .flatMap(tick -> processNextJob())
+                .subscribe(null, error -> logger.error("An error occurred during job scanning.", error));
     }
 
+    private Mono<Void> processNextJob() {
+        return jobService.findPendingJob()
+                .flatMap(job -> jobService.updateJobStatusToMining(job).thenReturn(job))
+                .doOnNext(job -> logger.info("Initiating job: {}", job.getId()))
+                .flatMap(job -> mineService.mineCommits(job).thenReturn(job))
+                .doOnNext(job -> logger.info("Finishing job: {}", job.getId()))
+                .flatMap(jobService::updateJobStatusToCompleted);
+    }
 }
