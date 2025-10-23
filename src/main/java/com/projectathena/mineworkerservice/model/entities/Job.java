@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -25,13 +25,14 @@ public class Job implements Serializable {
     @Column(length = 80, nullable = false)
     private JobStatus jobStatus;
     @Column(length = 100, nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Column(length = 100)
-    private Date startedAt;
+    private LocalDateTime startedAt;
     @Column(length = 100)
-    private Date finishedAt;
+    private LocalDateTime finishedAt;
     @Column(length = 100)
-    private Date lastUpdated;
+    @Temporal(TemporalType.TIMESTAMP)
+    private LocalDateTime lastUpdated;
     @Column(length = 100, nullable = false)
     private String gitRepositoryOwner;
     @Column(length = 100, nullable = false)
@@ -44,7 +45,7 @@ public class Job implements Serializable {
     public Job() {
     }
 
-    public Job(String id, User requestedBy, JobStatus jobStatus, Date createdAt, Date startedAt, Date finishedAt, Date lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
+    public Job(String id, User requestedBy, JobStatus jobStatus, LocalDateTime createdAt, LocalDateTime startedAt, LocalDateTime finishedAt, LocalDateTime lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
         this.id = id;
         this.requestedBy = requestedBy;
         this.jobStatus = jobStatus;
@@ -82,35 +83,35 @@ public class Job implements Serializable {
         this.jobStatus = jobStatus;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Date getStartedAt() {
+    public LocalDateTime getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(Date startedAt) {
+    public void setStartedAt(LocalDateTime startedAt) {
         this.startedAt = startedAt;
     }
 
-    public Date getFinishedAt() {
+    public LocalDateTime getFinishedAt() {
         return finishedAt;
     }
 
-    public void setFinishedAt(Date finishedAt) {
+    public void setFinishedAt(LocalDateTime finishedAt) {
         this.finishedAt = finishedAt;
     }
 
-    public Date getLastUpdated() {
+    public LocalDateTime getLastUpdated() {
         return lastUpdated;
     }
 
-    public void setLastUpdated(Date lastUpdated) {
+    public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 

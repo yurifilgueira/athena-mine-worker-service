@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -27,7 +28,8 @@ public class JobTimeoutScanner {
         List<Job> jobs = jobService.findJobsByStatus(JobStatus.MINING);
 
         for (Job job : jobs) {
-            Instant jobLastUpdatedAt = job.getLastUpdated().toInstant();
+            var lastUpdated = job.getLastUpdated();
+            Instant jobLastUpdatedAt = lastUpdated.toInstant(ZoneId.systemDefault().getRules().getOffset(lastUpdated));
             Instant now = Instant.now();
             Duration duration = Duration.between(jobLastUpdatedAt, now);
 

@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,8 +43,8 @@ public class JobService {
 
     public void updateJobStatusToMining(Job job) {
         job.setJobStatus(JobStatus.MINING);
-        job.setStartedAt(new Date());
-        job.setLastUpdated(new Date());
+        job.setStartedAt(LocalDateTime.now());
+        job.setLastUpdated(LocalDateTime.now());
         job.setWorkerId(workerIdProvider.getWorkerId());
 
         jobRepository.save(job);
@@ -52,14 +52,14 @@ public class JobService {
 
     public void updateJobStatusToCompleted(Job job) {
         job.setJobStatus(JobStatus.COMPLETED);
-        job.setFinishedAt(new Date());
-        job.setLastUpdated(new Date());
+        job.setFinishedAt(LocalDateTime.now());
+        job.setLastUpdated(LocalDateTime.now());
 
         jobRepository.save(job);
     }
 
     public void updateJobProgress(Job job, String cursor) {
-        job.setLastUpdated(new Date());
+        job.setLastUpdated(LocalDateTime.now());
         job.setCursor(cursor);
 
         jobRepository.save(job);
@@ -84,7 +84,7 @@ public class JobService {
         Job job = new Job();
         job.setRequestedBy(user);
         job.setJobStatus(JobStatus.PENDING);
-        job.setCreatedAt(new Date());
+        job.setCreatedAt(LocalDateTime.now());
         job.setGitRepositoryOwner(request.gitRepositoryOwner());
         job.setGitRepositoryName(request.gitRepositoryName());
 
@@ -100,7 +100,7 @@ public class JobService {
 
     public void updateJobToPending(Job job) {
         job.setJobStatus(JobStatus.PENDING);
-        job.setLastUpdated(new Date());
+        job.setLastUpdated(LocalDateTime.now());
         job.setWorkerId(null);
 
         jobRepository.save(job);

@@ -1,0 +1,47 @@
+scalar LocalDateTime
+
+input PublishJobRequest {
+    userName: String!,
+    userEmail: String!,
+    gitRepositoryName: String!,
+    gitRepositoryOwner: String!
+}
+
+enum JobStatus {
+    PENDING,
+    MINING,
+    COMPLETED,
+    FAILED
+}
+
+type JobSubmissionResponse {
+    jobId: ID!,
+    status: JobStatus,
+}
+
+type Job {
+    id: ID!,
+    user: User!,
+    jobStatus: JobStatus!,
+    createdAt: LocalDateTime!,
+    startedAt: LocalDateTime,
+    finishedAt: LocalDateTime,
+    lastUpdated: LocalDateTime,
+    gitRepositoryOwner: String!,
+    gitRepositoryName: String!,
+    cursor: String,
+    workerId: String
+}
+
+type Mutation{
+    publishJob(
+        userName: String!,
+        userEmail: String!,
+        gitRepositoryName: String!,
+        gitRepositoryOwner: String!
+    ): JobSubmissionResponse
+}
+
+type Query {
+    getJob(id: String!): Job
+}
