@@ -74,19 +74,39 @@ public class JobService {
                     return userRepository.save(newUser);
                 }));
 
-        return userMono.flatMap(user -> {
-            Job job = new Job();
-            job.setRequestedBy(user);
-            job.setRequestedById(user.getId());
-            job.setJobStatus(JobStatus.PENDING);
-            job.setCreatedAt(Instant.now());
-            job.setGitRepositoryOwner(request.gitRepositoryOwner());
-            job.setGitRepositoryName(request.gitRepositoryName());
-            return jobRepository.save(job);
-        }).map(savedJob -> {
-            String urlJobStatus = BASE_URL_VERIFY_JOB_STATUS + "/" + applicationName + "/jobs/status/" + savedJob.getId();
-            return new JobSubmissionResponse(savedJob.getId(), savedJob.getJobStatus(), urlJobStatus);
-        }).as(transactionalOperator::transactional);
+        return userMono
+                .flatMap(user -> {
+                    return jobRepository.findByRequestedByAndGitRepositoryNameAndGitRepositoryOwner(
+                            user,
+                            request.gitRepositoryName(),
+                            request.gitRepositoryOwner()
+                    ).switchIfEmpty(
+                            Mono.defer(() -> {
+                                Job newJob = new Job();
+                                newJob.setRequestedBy(user);
+                                newJob.setRequestedById(user.getId());
+                                newJob.setJobStatus(JobStatus.PENDING);
+                                newJob.setCreatedAt(Instant.now());
+                                newJob.setGitRepositoryOwner(request.gitRepositoryOwner());
+                                newJob.setGitRepositoryName(request.gitRepositoryName());
+
+                                return jobRepository.save(newJob);
+                            })
+                    );
+                })
+                .flatMap(j -> {
+                    if (j.getCursor() != null) {
+                        j.setJobStatus(JobStatus.PENDING);
+                        return jobRepository.save(j);
+                    }else {
+                        return Mono.just(j);
+                    }
+                })
+                .map(savedJob -> {
+                    String urlJobStatus = BASE_URL_VERIFY_JOB_STATUS + "/" + applicationName + "/jobs/status/" + savedJob.getId();
+                    return new JobSubmissionResponse(savedJob.getId(), savedJob.getJobStatus(), urlJobStatus);
+                })
+                .as(transactionalOperator::transactional);
     }
 
     public Flux<Job> findJobsByStatus(JobStatus jobStatus) {

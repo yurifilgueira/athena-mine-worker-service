@@ -3,16 +3,15 @@ package com.projectathena.mineworkerservice.service;
 import com.projectathena.mineworkerservice.model.dto.commit.Commit;
 import com.projectathena.mineworkerservice.model.dto.commit.GitActor;
 import com.projectathena.mineworkerservice.model.dto.requests.MiningResultRequest;
-import com.projectathena.mineworkerservice.model.entities.GitAuthor;
-import com.projectathena.mineworkerservice.model.entities.Job;
-import com.projectathena.mineworkerservice.model.entities.MiningCommit;
-import com.projectathena.mineworkerservice.model.entities.MiningResult;
+import com.projectathena.mineworkerservice.model.entities.*;
 import com.projectathena.mineworkerservice.model.enums.MiningStatus;
 import com.projectathena.mineworkerservice.repositories.GitAuthorRepository;
 import com.projectathena.mineworkerservice.repositories.MiningCommitRepository;
 import com.projectathena.mineworkerservice.repositories.MiningResultRepository;
+import com.projectathena.mineworkerservice.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
@@ -33,15 +32,19 @@ public class MiningResultService {
     private final MiningCommitRepository miningCommitRepository;
     private final GitAuthorRepository gitAuthorRepository;
     private final TransactionalOperator transactionalOperator;
+    private final UserRepository userRepository;
 
     public MiningResultService(MiningResultRepository miningResultRepository,
                                MiningCommitRepository miningCommitRepository,
                                GitAuthorRepository gitAuthorRepository,
-                               TransactionalOperator transactionalOperator) {
+                               TransactionalOperator transactionalOperator,
+                               UserRepository userRepository
+    ) {
         this.miningResultRepository = miningResultRepository;
         this.miningCommitRepository = miningCommitRepository;
         this.gitAuthorRepository = gitAuthorRepository;
         this.transactionalOperator = transactionalOperator;
+        this.userRepository = userRepository;
     }
 
     public Mono<MiningResult> startMiningResult(Job job) {
@@ -190,7 +193,7 @@ public class MiningResultService {
                 });
     }
 
-    public Mono<MiningResult> findForUserAndRepository(MiningResultRequest request) {
+    public Flux<MiningCommit> findForUserAndRepository(MiningResultRequest request) {
 
         Mono<MiningResult> miningResultMono = miningResultRepository.findByJobUserAndRepository(
                 request.userEmail(),
@@ -199,23 +202,35 @@ public class MiningResultService {
         );
 
         return miningResultMono
-                .flatMap(result -> {
+                .flatMapMany(result -> {
                     UUID resultId = result.getId();
+                    return miningCommitRepository.findByMiningResultId(resultId);
+                })
+                .flatMap(commit -> {
+                    if (commit.getAuthorId() == null || commit.getCommitterId() == null) {
+                        return Mono.just(commit);
+                    }
 
-                    Flux<MiningCommit> commitsFlux = miningCommitRepository.findByMiningResultId(resultId);
+                    Mono<GitAuthor> authorMono = gitAuthorRepository.findById(commit.getAuthorId());
+                    Mono<GitAuthor> committerMono;
 
-                    Flux<MiningCommit> enrichedCommitsFlux = commitsFlux.flatMap(this::fetchAuthorAndCommitter);
-
-                    return Mono.just(result)
-                            .zipWith(enrichedCommitsFlux.collectList())
+                    if (commit.getAuthoredByCommitter()) {
+                        committerMono = authorMono;
+                    } else {
+                        committerMono = gitAuthorRepository.findById(commit.getCommitterId());
+                    }
+                    return Mono.zip(authorMono, committerMono)
                             .map(tuple -> {
-                                MiningResult completeResult = tuple.getT1();
-                                List<MiningCommit> commits = tuple.getT2();
+                                GitAuthor author = tuple.getT1();
+                                GitAuthor committer = tuple.getT2();
+                                commit.setAuthor(author);
+                                commit.setCommitter(committer);
 
-                                completeResult.setCommits(commits);
-                                return completeResult;
-                            });
-                });
+                                return commit;
+                            })
+                            .defaultIfEmpty(commit);
+                })
+                .filter(commit -> commit.getAuthor() != null && commit.getAuthor().getLogin() != null);
     }
 
 }
