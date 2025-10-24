@@ -16,5 +16,5 @@ import java.util.UUID;
 public interface JobRepository extends ReactiveCrudRepository<Job, UUID> {
     Mono<Job> findFirstByJobStatusOrderByCreatedAtAsc(JobStatus jobStatus);
     Flux<Job> findByJobStatus(JobStatus jobStatus);
-    Mono<Job> findByRequestedByAndGitRepositoryNameAndGitRepositoryOwner(User requestedBy, String gitRepositoryName, String gitRepositoryOwner);
+    Mono<Job> findByRequestedByIdAndGitRepositoryNameAndGitRepositoryOwner(UUID requestedById, String gitRepositoryName, String gitRepositoryOwner);
 }

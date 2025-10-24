@@ -76,8 +76,8 @@ public class JobService {
 
         return userMono
                 .flatMap(user -> {
-                    return jobRepository.findByRequestedByAndGitRepositoryNameAndGitRepositoryOwner(
-                            user,
+                    return jobRepository.findByRequestedByIdAndGitRepositoryNameAndGitRepositoryOwner(
+                            user.getId(),
                             request.gitRepositoryName(),
                             request.gitRepositoryOwner()
                     ).switchIfEmpty(
