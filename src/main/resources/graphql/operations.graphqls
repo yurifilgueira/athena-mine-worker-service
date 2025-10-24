@@ -1,0 +1,13 @@
+type Mutation{
+    publishJob(request: PublishJobRequest): Job
+}
+
+type Query {
+    getJob(id: String!): Job
+    getMiningResult(
+        userName: String!,
+        userEmail: String!,
+        gitRepositoryName: String!,
+        gitRepositoryOwner: String!
+    ): MiningResult
+}

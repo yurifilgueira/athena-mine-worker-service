@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
 
@@ -55,7 +56,7 @@ public class MiningCommit implements Serializable {
     private String commitUrl;
     
     @Column(nullable = false)
-    private Date committedDate;
+    private LocalDateTime committedDate;
 
     public MiningCommit() {
     }
@@ -148,11 +149,11 @@ public class MiningCommit implements Serializable {
         this.commitUrl = commitUrl;
     }
 
-    public Date getCommittedDate() {
+    public LocalDateTime getCommittedDate() {
         return committedDate;
     }
 
-    public void setCommittedDate(Date committedDate) {
+    public void setCommittedDate(LocalDateTime committedDate) {
         this.committedDate = committedDate;
     }
 

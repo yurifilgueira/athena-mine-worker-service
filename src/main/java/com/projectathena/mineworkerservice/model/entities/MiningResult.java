@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -31,10 +32,10 @@ public class MiningResult implements Serializable {
     private String repositoryName;
     
     @Column(nullable = false)
-    private Date startedAt;
+    private LocalDateTime startedAt;
     
     @Column
-    private Date lastUpdatedAt;
+    private LocalDateTime lastUpdatedAt;
     
     @Column
     private Integer totalCommits;
@@ -85,19 +86,19 @@ public class MiningResult implements Serializable {
         this.repositoryName = repositoryName;
     }
 
-    public Date getStartedAt() {
+    public LocalDateTime getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(Date startedAt) {
+    public void setStartedAt(LocalDateTime startedAt) {
         this.startedAt = startedAt;
     }
 
-    public Date getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
-    public void setLastUpdatedAt(Date lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 

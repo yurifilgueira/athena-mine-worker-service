@@ -13,9 +13,12 @@ import com.projectathena.mineworkerservice.repositories.MiningCommitRepository;
 import com.projectathena.mineworkerservice.repositories.MiningResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -45,8 +48,8 @@ public class MiningResultService {
         miningResult.setJobId(job.getId());
         miningResult.setRepositoryOwner(job.getGitRepositoryOwner());
         miningResult.setRepositoryName(job.getGitRepositoryName());
-        miningResult.setStartedAt(new Date());
-        miningResult.setLastUpdatedAt(new Date());
+        miningResult.setStartedAt(LocalDateTime.now());
+        miningResult.setLastUpdatedAt(LocalDateTime.now());
         miningResult.setStatus(MiningStatus.IN_PROGRESS);
         miningResult.setTotalCommits(0);
 
@@ -72,7 +75,7 @@ public class MiningResultService {
             miningCommit.setDeletions(commitDto.deletions());
             miningCommit.setAuthoredByCommitter(commitDto.authoredByCommitter());
             miningCommit.setCommitUrl(commitDto.commitUrl());
-            miningCommit.setCommittedDate(commitDto.committedDate());
+            miningCommit.setCommittedDate(LocalDateTime.ofInstant(commitDto.committedDate().toInstant(), ZoneId.systemDefault()));
 
             if (commitDto.author() != null) {
                 GitAuthor author = findOrCreateGitAuthor(commitDto.author());
@@ -88,7 +91,7 @@ public class MiningResultService {
             savedCount++;
         }
 
-        miningResult.setLastUpdatedAt(new Date());
+        miningResult.setLastUpdatedAt(LocalDateTime.now());
         miningResult.setLastCursor(cursor);
         miningResult.setTotalCommits(miningResult.getTotalCommits() + savedCount);
         
@@ -105,7 +108,7 @@ public class MiningResultService {
                 .orElseThrow(() -> new RuntimeException("MiningResult not found for job: " + job.getId()));
 
         miningResult.setStatus(MiningStatus.COMPLETED);
-        miningResult.setLastUpdatedAt(new Date());
+        miningResult.setLastUpdatedAt(LocalDateTime.now());
 
         return miningResultRepository.save(miningResult);
     }
@@ -127,7 +130,8 @@ public class MiningResultService {
 
         GitAuthor newAuthor = new GitAuthor();
         newAuthor.setAvatarUrl(gitActor.avatarUrl());
-        newAuthor.setDate(gitActor.date());
+        LocalDateTime date = LocalDateTime.ofInstant(gitActor.date().toInstant(), ZoneId.systemDefault());
+        newAuthor.setDate(date);
         newAuthor.setEmail(gitActor.email());
         newAuthor.setName(gitActor.name());
 

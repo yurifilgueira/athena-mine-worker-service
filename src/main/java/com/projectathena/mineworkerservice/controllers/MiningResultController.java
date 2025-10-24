@@ -3,11 +3,12 @@ package com.projectathena.mineworkerservice.controllers;
 import com.projectathena.mineworkerservice.model.dto.requests.MiningResultRequest;
 import com.projectathena.mineworkerservice.model.entities.MiningResult;
 import com.projectathena.mineworkerservice.service.MiningResultService;
-import org.springframework.http.ResponseEntity;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping(value = "/mining-results")
+@Controller
 public class MiningResultController {
 
     private final MiningResultService miningResultService;
@@ -16,21 +17,16 @@ public class MiningResultController {
         this.miningResultService = miningResultService;
     }
 
-    @GetMapping("")
-    public ResponseEntity<?> getMiningResult(
-            @RequestParam String userName,
-            @RequestParam String userEmail,
-            @RequestParam String gitRepositoryName,
-            @RequestParam String gitRepositoryOwner) {
+    @QueryMapping
+    public MiningResult getMiningResult(
+            @Argument String userName,
+            @Argument String userEmail,
+            @Argument String gitRepositoryName,
+            @Argument String gitRepositoryOwner) {
 
         MiningResultRequest request = new MiningResultRequest(userName, userEmail, gitRepositoryName, gitRepositoryOwner);
         var miningResult = miningResultService.findForUserAndRepository(request);
 
-        if (miningResult.isPresent()) {
-            return ResponseEntity.ok().body(miningResult.get());
-        }
-
-        return ResponseEntity.notFound().build();
+        return miningResult.orElse(null);
     }
-
 }

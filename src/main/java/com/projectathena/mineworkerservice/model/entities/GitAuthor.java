@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Table(name = "git_authors")
@@ -22,7 +22,7 @@ public class GitAuthor implements Serializable {
     private String avatarUrl;
     
     @Column
-    private Date date;
+    private LocalDateTime date;
     
     @Column
     private String email;
@@ -55,11 +55,11 @@ public class GitAuthor implements Serializable {
         this.avatarUrl = avatarUrl;
     }
 
-    public Date getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 

@@ -1,0 +1,14 @@
+type MiningCommit {
+    id: String!,
+    miningResult: MiningResult,
+    oid: String!,
+    message: String!,
+    messageBody: String!,
+    additions: Int!,
+    deletions: Int!,
+    author: GitAuthor,
+    committer: GitAuthor,
+    authoredByCommitter: Boolean,
+    commitUrl: String!,
+    committedDate: LocalDateTime
+}

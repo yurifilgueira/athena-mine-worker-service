@@ -1,0 +1,18 @@
+type MiningResult {
+    id: String!,
+    jobId: String!,
+    repositoryOwner: String!,
+    repositoryName: String!,
+    startedAt: LocalDateTime!,
+    lastUpdatedAt: LocalDateTime!,
+    totalCommits: Int,
+    status: MiningStatus,
+    lastCursor: String,
+    commits: [MiningCommit]
+}
+
+enum MiningStatus {
+    IN_PROGRESS,
+    COMPLETED,
+    FAILED
+}

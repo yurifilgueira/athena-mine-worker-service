@@ -32,11 +32,3 @@ type Job {
     cursor: String,
     workerId: String
 }
-
-type Mutation{
-    publishJob(request: PublishJobRequest): Job
-}
-
-type Query {
-    getJob(id: String!): Job
-}
