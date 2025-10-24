@@ -31,7 +31,6 @@ public class Job implements Serializable {
     @Column(length = 100)
     private LocalDateTime finishedAt;
     @Column(length = 100)
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime lastUpdated;
     @Column(length = 100, nullable = false)
     private String gitRepositoryOwner;
@@ -142,6 +141,7 @@ public class Job implements Serializable {
     public String getWorkerId() {
         return workerId;
     }
+
 
     public void setWorkerId(String workerId) {
         this.workerId = workerId;

@@ -65,7 +65,7 @@ public class JobService {
         jobRepository.save(job);
     }
 
-    public JobSubmissionResponse publishJob(PublishJobRequest request){
+    public Job publishJob(PublishJobRequest request){
 
         User user = userRepository.findByEmail(request.userEmail())
                 .orElseGet(() -> {
@@ -75,12 +75,6 @@ public class JobService {
                     return userRepository.save(newUser);
                 });
 
-        if (user == null) {
-            while (true) {
-                logger.error("User is null");
-            }
-        }
-
         Job job = new Job();
         job.setRequestedBy(user);
         job.setJobStatus(JobStatus.PENDING);
@@ -88,10 +82,7 @@ public class JobService {
         job.setGitRepositoryOwner(request.gitRepositoryOwner());
         job.setGitRepositoryName(request.gitRepositoryName());
 
-        var jobEntity =jobRepository.save(job);
-
-        String urlJobStatus = BASE_URL_VERIFY_JOB_STATUS + "/" + applicationName + "/jobs/status/" + jobEntity.getId();
-        return new JobSubmissionResponse(jobEntity.getId(), jobEntity.getJobStatus(), urlJobStatus);
+        return jobRepository.save(job);
     }
 
     public List<Job> findJobsByStatus(JobStatus jobStatus) {

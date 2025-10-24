@@ -4,8 +4,8 @@ import com.projectathena.mineworkerservice.model.dto.requests.PublishJobRequest;
 import com.projectathena.mineworkerservice.model.entities.Job;
 import com.projectathena.mineworkerservice.service.JobService;
 import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,12 +18,9 @@ public class JobController {
         this.jobService = jobService;
     }
 
-    @PostMapping(value = "/publish")
-    public ResponseEntity<?> publishJob(@RequestBody PublishJobRequest request){
-
-        var jobSubmissionResponse = jobService.publishJob(request);
-
-        return ResponseEntity.accepted().body(jobSubmissionResponse);
+    @MutationMapping
+    public Job publishJob(@Argument PublishJobRequest request){
+        return jobService.publishJob(request);
     }
 
     @QueryMapping

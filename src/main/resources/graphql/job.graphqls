@@ -21,7 +21,7 @@ type JobSubmissionResponse {
 
 type Job {
     id: ID!,
-    user: User!,
+    requestedBy: User!,
     jobStatus: JobStatus!,
     createdAt: LocalDateTime!,
     startedAt: LocalDateTime,
@@ -34,12 +34,7 @@ type Job {
 }
 
 type Mutation{
-    publishJob(
-        userName: String!,
-        userEmail: String!,
-        gitRepositoryName: String!,
-        gitRepositoryOwner: String!
-    ): JobSubmissionResponse
+    publishJob(request: PublishJobRequest): Job
 }
 
 type Query {
