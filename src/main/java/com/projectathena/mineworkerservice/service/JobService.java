@@ -2,8 +2,6 @@ package com.projectathena.mineworkerservice.service;
 
 import com.projectathena.mineworkerservice.configs.WorkerIdProvider;
 import com.projectathena.mineworkerservice.model.dto.requests.PublishJobRequest;
-import com.projectathena.mineworkerservice.model.dto.responses.JobSubmissionResponse;
-import com.projectathena.mineworkerservice.model.dto.responses.JobStatusResponse;
 import com.projectathena.mineworkerservice.model.entities.Job;
 import com.projectathena.mineworkerservice.model.entities.User;
 import com.projectathena.mineworkerservice.model.enums.JobStatus;
@@ -11,13 +9,11 @@ import com.projectathena.mineworkerservice.repositories.JobRepository;
 import com.projectathena.mineworkerservice.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -125,10 +121,5 @@ public class JobService {
                 return job;
             }).defaultIfEmpty(job);
         });
-    }
-
-    public Mono<JobStatusResponse> findJobStatusById(UUID id) {
-        return jobRepository.findById(id)
-                .map(job -> new JobStatusResponse(job.getId(), job.getJobStatus()));
     }
 }
