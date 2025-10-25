@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 
 @Service
 public class JobTimeoutScanner {
@@ -39,7 +40,9 @@ public class JobTimeoutScanner {
         return jobService.findJobsByStatus(JobStatus.MINING)
                 .filter(job -> {
                     if (job.getLastUpdated() == null) return false;
-                    Duration duration = Duration.between(job.getLastUpdated(), Instant.now());
+                    Instant jobLastUpdatedAt = job.getLastUpdated().toInstant(ZoneId.systemDefault().getRules()
+                            .getOffset(job.getLastUpdated()));
+                    Duration duration = Duration.between(jobLastUpdatedAt, Instant.now());
                     return duration.toSeconds() > 60;
                 })
                 .flatMap(this::resetJobToPending)

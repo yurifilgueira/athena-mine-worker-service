@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -23,7 +23,7 @@ public class GitAuthor implements Serializable {
     private String avatarUrl;
     
     @Column
-    private Instant date;
+    private LocalDateTime date;
     
     @Column
     private String email;
@@ -56,11 +56,11 @@ public class GitAuthor implements Serializable {
         this.avatarUrl = avatarUrl;
     }
 
-    public Instant getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(Instant date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 

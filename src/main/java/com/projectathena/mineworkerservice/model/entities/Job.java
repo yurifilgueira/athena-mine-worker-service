@@ -9,6 +9,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -27,13 +28,13 @@ public class Job implements Serializable {
     @Column
     private JobStatus jobStatus;
     @Column
-    private Instant createdAt;
+    private LocalDateTime createdAt;
     @Column
-    private Instant startedAt;
+    private LocalDateTime startedAt;
     @Column
-    private Instant finishedAt;
+    private LocalDateTime finishedAt;
     @Column
-    private Instant lastUpdated;
+    private LocalDateTime lastUpdated;
     @Column
     private String gitRepositoryOwner;
     @Column
@@ -46,7 +47,7 @@ public class Job implements Serializable {
     public Job() {
     }
 
-    public Job(UUID id, User requestedBy, JobStatus jobStatus, Instant createdAt, Instant startedAt, Instant finishedAt, Instant lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
+    public Job(UUID id, User requestedBy, JobStatus jobStatus, LocalDateTime createdAt, LocalDateTime startedAt, LocalDateTime finishedAt, LocalDateTime lastUpdated, String gitRepositoryOwner, String gitRepositoryName, String cursor, String workerId) {
         this.id = id;
         this.requestedBy = requestedBy;
         this.jobStatus = jobStatus;
@@ -84,35 +85,35 @@ public class Job implements Serializable {
         this.jobStatus = jobStatus;
     }
 
-    public Instant getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Instant getStartedAt() {
+    public LocalDateTime getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(Instant startedAt) {
+    public void setStartedAt(LocalDateTime startedAt) {
         this.startedAt = startedAt;
     }
 
-    public Instant getFinishedAt() {
+    public LocalDateTime getFinishedAt() {
         return finishedAt;
     }
 
-    public void setFinishedAt(Instant finishedAt) {
+    public void setFinishedAt(LocalDateTime finishedAt) {
         this.finishedAt = finishedAt;
     }
 
-    public Instant getLastUpdated() {
+    public LocalDateTime getLastUpdated() {
         return lastUpdated;
     }
 
-    public void setLastUpdated(Instant lastUpdated) {
+    public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 

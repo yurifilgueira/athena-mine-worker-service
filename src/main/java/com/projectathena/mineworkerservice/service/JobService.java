@@ -18,6 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -27,9 +28,6 @@ public class JobService {
     private final UserRepository userRepository;
     private final WorkerIdProvider workerIdProvider;
     private final Logger logger = LoggerFactory.getLogger(JobService.class);
-    @Value(value = "${spring.application.name}")
-    private String applicationName;
-    private final static String BASE_URL_VERIFY_JOB_STATUS = "http://localhost:8080";
     private final TransactionalOperator transactionalOperator;
 
     public JobService(JobRepository jobRepository, WorkerIdProvider workerIdProvider, UserRepository userRepository, TransactionalOperator transactionalOperator) {
@@ -46,26 +44,26 @@ public class JobService {
 
     public Mono<Void> updateJobStatusToMining(Job job) {
         job.setJobStatus(JobStatus.MINING);
-        job.setStartedAt(Instant.now());
-        job.setLastUpdated(Instant.now());
+        job.setStartedAt(LocalDateTime.now());
+        job.setLastUpdated(LocalDateTime.now());
         job.setWorkerId(workerIdProvider.getWorkerId());
         return jobRepository.save(job).then();
     }
 
     public Mono<Void> updateJobStatusToCompleted(Job job) {
         job.setJobStatus(JobStatus.COMPLETED);
-        job.setFinishedAt(Instant.now());
-        job.setLastUpdated(Instant.now());
+        job.setFinishedAt(LocalDateTime.now());
+        job.setLastUpdated(LocalDateTime.now());
         return jobRepository.save(job).then();
     }
 
     public Mono<Void> updateJobProgress(Job job, String cursor) {
-        job.setLastUpdated(Instant.now());
+        job.setLastUpdated(LocalDateTime.now());
         job.setCursor(cursor);
         return jobRepository.save(job).then();
     }
 
-    public Mono<JobSubmissionResponse> publishJob(PublishJobRequest request) {
+    public Mono<Job> publishJob(PublishJobRequest request) {
         Mono<User> userMono = userRepository.findByEmail(request.userEmail())
                 .switchIfEmpty(Mono.defer(() -> {
                     User newUser = new User();
@@ -86,7 +84,7 @@ public class JobService {
                                 newJob.setRequestedBy(user);
                                 newJob.setRequestedById(user.getId());
                                 newJob.setJobStatus(JobStatus.PENDING);
-                                newJob.setCreatedAt(Instant.now());
+                                newJob.setCreatedAt(LocalDateTime.now());
                                 newJob.setGitRepositoryOwner(request.gitRepositoryOwner());
                                 newJob.setGitRepositoryName(request.gitRepositoryName());
 
@@ -102,10 +100,6 @@ public class JobService {
                         return Mono.just(j);
                     }
                 })
-                .map(savedJob -> {
-                    String urlJobStatus = BASE_URL_VERIFY_JOB_STATUS + "/" + applicationName + "/jobs/status/" + savedJob.getId();
-                    return new JobSubmissionResponse(savedJob.getId(), savedJob.getJobStatus(), urlJobStatus);
-                })
                 .as(transactionalOperator::transactional);
     }
 
@@ -115,7 +109,7 @@ public class JobService {
 
     public Mono<Void> updateJobToPending(Job job) {
         job.setJobStatus(JobStatus.PENDING);
-        job.setLastUpdated(Instant.now());
+        job.setLastUpdated(LocalDateTime.now());
         job.setWorkerId(null);
 
         return jobRepository.save(job)
@@ -124,7 +118,13 @@ public class JobService {
     }
 
     public Mono<Job> findById(UUID id) {
-        return jobRepository.findById(id);
+        return jobRepository.findById(id).flatMap(job -> {
+            UUID userId = job.getRequestedById();
+            return userRepository.findById(userId).map(user -> {
+                job.setRequestedBy(user);
+                return job;
+            }).defaultIfEmpty(job);
+        });
     }
 
     public Mono<JobStatusResponse> findJobStatusById(UUID id) {

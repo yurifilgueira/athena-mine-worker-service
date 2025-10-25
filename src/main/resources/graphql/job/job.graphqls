@@ -14,14 +14,10 @@ enum JobStatus {
     FAILED
 }
 
-type JobSubmissionResponse {
-    jobId: ID!,
-    status: JobStatus,
-}
-
 type Job {
     id: ID!,
     requestedBy: User!,
+    requestedById: String!,
     jobStatus: JobStatus!,
     createdAt: LocalDateTime!,
     startedAt: LocalDateTime,

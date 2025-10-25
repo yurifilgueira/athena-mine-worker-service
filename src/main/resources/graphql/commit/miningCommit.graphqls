@@ -1,6 +1,9 @@
 type MiningCommit {
     id: String!,
     miningResult: MiningResult,
+    miningResultId: String,
+    authorId: String,
+    committerId: String,
     oid: String!,
     message: String!,
     messageBody: String!,

@@ -7,6 +7,8 @@ import com.projectathena.mineworkerservice.service.MiningResultService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,12 +25,12 @@ public class MiningResultController {
         this.miningResultService = miningResultService;
     }
 
-    @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<MiningCommit> getMiningResult(
-            @RequestParam String userName,
-            @RequestParam String userEmail,
-            @RequestParam String gitRepositoryName,
-            @RequestParam String gitRepositoryOwner) {
+    @QueryMapping
+    public Mono<MiningResult> getMiningResult(
+            @Argument String userName,
+            @Argument String userEmail,
+            @Argument String gitRepositoryName,
+            @Argument String gitRepositoryOwner) {
 
         MiningResultRequest request = new MiningResultRequest(userName, userEmail, gitRepositoryName, gitRepositoryOwner);
         return miningResultService.findForUserAndRepository(request);

@@ -19,6 +19,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -32,31 +34,27 @@ public class MiningResultService {
     private final MiningCommitRepository miningCommitRepository;
     private final GitAuthorRepository gitAuthorRepository;
     private final TransactionalOperator transactionalOperator;
-    private final UserRepository userRepository;
 
     public MiningResultService(MiningResultRepository miningResultRepository,
                                MiningCommitRepository miningCommitRepository,
                                GitAuthorRepository gitAuthorRepository,
-                               TransactionalOperator transactionalOperator,
-                               UserRepository userRepository
+                               TransactionalOperator transactionalOperator
     ) {
         this.miningResultRepository = miningResultRepository;
         this.miningCommitRepository = miningCommitRepository;
         this.gitAuthorRepository = gitAuthorRepository;
         this.transactionalOperator = transactionalOperator;
-        this.userRepository = userRepository;
     }
 
     public Mono<MiningResult> startMiningResult(Job job) {
-        logger.info("Iniciando MiningResult para job: {}", job.getId());
+        logger.info("Initiating MiningResult for job: {}", job.getId());
 
         MiningResult miningResult = new MiningResult();
         miningResult.setJobId(job.getId());
         miningResult.setRepositoryOwner(job.getGitRepositoryOwner());
         miningResult.setRepositoryName(job.getGitRepositoryName());
-
-        miningResult.setStartedAt(Instant.now());
-        miningResult.setLastUpdatedAt(Instant.now());
+        miningResult.setStartedAt(LocalDateTime.now());
+        miningResult.setLastUpdatedAt(LocalDateTime.now());
         miningResult.setStatus(MiningStatus.IN_PROGRESS);
         miningResult.setTotalCommits(0);
 
@@ -94,7 +92,8 @@ public class MiningResultService {
                                             miningCommit.setDeletions(commitDto.deletions());
                                             miningCommit.setAuthoredByCommitter(commitDto.authoredByCommitter());
                                             miningCommit.setCommitUrl(commitDto.commitUrl());
-                                            miningCommit.setCommittedDate(commitDto.committedDate());
+                                            LocalDateTime committedDate = LocalDateTime.ofInstant(commitDto.committedDate(), ZoneId.systemDefault());
+                                            miningCommit.setCommittedDate(committedDate);
 
                                             miningCommit.setAuthor(tuple.getT1());
                                             miningCommit.setCommitter(tuple.getT2());
@@ -104,7 +103,7 @@ public class MiningResultService {
 
                     return miningCommitRepository.saveAll(miningCommitsFlux)
                             .then(Mono.defer(() -> {
-                                miningResult.setLastUpdatedAt(Instant.now());
+                                miningResult.setLastUpdatedAt(LocalDateTime.now());
                                 miningResult.setLastCursor(cursor);
                                 miningResult.setTotalCommits(miningResult.getTotalCommits() + commits.size());
                                 logger.info("Saved {} new commits. Cumulative total: {}", commits.size(), miningResult.getTotalCommits());
@@ -117,13 +116,13 @@ public class MiningResultService {
     }
 
     public Mono<Void> completeMiningResult(Job job) {
-        logger.info("Finalizando MiningResult para job: {}", job.getId());
+        logger.info("Finishing MiningResult for job: {}", job.getId());
 
         return miningResultRepository.findByJobId(job.getId())
                 .switchIfEmpty(Mono.error(new RuntimeException("MiningResult not found for job: " + job.getId())))
                 .flatMap(miningResult -> {
                     miningResult.setStatus(MiningStatus.COMPLETED);
-                    miningResult.setLastUpdatedAt(Instant.now());
+                    miningResult.setLastUpdatedAt(LocalDateTime.now());
                     return miningResultRepository.save(miningResult);
                 })
                 .as(transactionalOperator::transactional)
@@ -147,7 +146,8 @@ public class MiningResultService {
                 .switchIfEmpty(Mono.defer(() -> {
                     GitAuthor newAuthor = new GitAuthor();
                     newAuthor.setAvatarUrl(gitActor.avatarUrl());
-                    newAuthor.setDate(gitActor.date().toInstant());
+                    LocalDateTime date = LocalDateTime.ofInstant(gitActor.date().toInstant(), ZoneId.systemDefault());
+                    newAuthor.setDate(date);
                     newAuthor.setEmail(gitActor.email());
                     newAuthor.setName(gitActor.name());
 
@@ -193,44 +193,47 @@ public class MiningResultService {
                 });
     }
 
-    public Flux<MiningCommit> findForUserAndRepository(MiningResultRequest request) {
-
+    public Mono<MiningResult> findForUserAndRepository(MiningResultRequest request) {
         Mono<MiningResult> miningResultMono = miningResultRepository.findByJobUserAndRepository(
                 request.userEmail(),
                 request.gitRepositoryOwner(),
                 request.gitRepositoryName()
         );
 
-        return miningResultMono
-                .flatMapMany(result -> {
-                    UUID resultId = result.getId();
-                    return miningCommitRepository.findByMiningResultId(resultId);
-                })
-                .flatMap(commit -> {
-                    if (commit.getAuthorId() == null || commit.getCommitterId() == null) {
-                        return Mono.just(commit);
-                    }
+        return miningResultMono.flatMap(result -> {
+            Flux<MiningCommit> commitsFlux = miningCommitRepository.findByMiningResultId(result.getId());
+            Flux<MiningCommit> populatedCommitsFlux = commitsFlux
+                    .flatMap(commit -> {
+                        if (commit.getAuthorId() == null || commit.getCommitterId() == null) {
+                            return Mono.just(commit);
+                        }
 
-                    Mono<GitAuthor> authorMono = gitAuthorRepository.findById(commit.getAuthorId());
-                    Mono<GitAuthor> committerMono;
+                        Mono<GitAuthor> authorMono = gitAuthorRepository.findById(commit.getAuthorId());
+                        Mono<GitAuthor> committerMono;
 
-                    if (commit.getAuthoredByCommitter()) {
-                        committerMono = authorMono;
-                    } else {
-                        committerMono = gitAuthorRepository.findById(commit.getCommitterId());
-                    }
-                    return Mono.zip(authorMono, committerMono)
-                            .map(tuple -> {
-                                GitAuthor author = tuple.getT1();
-                                GitAuthor committer = tuple.getT2();
-                                commit.setAuthor(author);
-                                commit.setCommitter(committer);
+                        if (commit.getAuthoredByCommitter()) {
+                            committerMono = authorMono;
+                        } else {
+                            committerMono = gitAuthorRepository.findById(commit.getCommitterId());
+                        }
 
-                                return commit;
-                            })
-                            .defaultIfEmpty(commit);
-                })
-                .filter(commit -> commit.getAuthor() != null && commit.getAuthor().getLogin() != null);
+                        return Mono.zip(authorMono, committerMono)
+                                .map(tuple -> {
+                                    commit.setAuthor(tuple.getT1());
+                                    commit.setCommitter(tuple.getT2());
+                                    return commit;
+                                })
+                                .defaultIfEmpty(commit);
+                    })
+                    .filter(commit -> commit.getAuthor() != null && commit.getAuthor().getLogin() != null);
+
+            Mono<List<MiningCommit>> commitsListMono = populatedCommitsFlux.collectList();
+
+            return commitsListMono.map(commitsList -> {
+                result.setCommits(commitsList);
+                return result;
+            });
+        });
     }
 
 }
