@@ -1,0 +1,9 @@
+type GitAuthor {
+    id: String!,
+    avatarUrl: String,
+    date: LocalDateTime!,
+    email: String,
+    name: String,
+    userId: String,
+    login: String,
+}
