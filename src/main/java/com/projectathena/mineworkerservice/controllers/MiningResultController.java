@@ -23,8 +23,8 @@ public class MiningResultController {
         this.miningResultService = miningResultService;
     }
 
-    @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<MiningCommit> getMiningResult(
+    @GetMapping
+    public Mono<MiningResult> getMiningResult(
             @RequestParam String userName,
             @RequestParam String userEmail,
             @RequestParam String gitRepositoryName,
