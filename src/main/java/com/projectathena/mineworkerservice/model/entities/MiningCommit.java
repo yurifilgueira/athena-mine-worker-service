@@ -7,7 +7,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -61,7 +61,7 @@ public class MiningCommit implements Serializable{
     private String commitUrl;
     
     @Column
-    private Instant committedDate;
+    private LocalDateTime committedDate;
 
     public MiningCommit() {
     }
@@ -188,11 +188,11 @@ public class MiningCommit implements Serializable{
         this.commitUrl = commitUrl;
     }
 
-    public Instant getCommittedDate() {
+    public LocalDateTime getCommittedDate() {
         return committedDate;
     }
 
-    public void setCommittedDate(Instant committedDate) {
+    public void setCommittedDate(LocalDateTime committedDate) {
         this.committedDate = committedDate;
     }
 

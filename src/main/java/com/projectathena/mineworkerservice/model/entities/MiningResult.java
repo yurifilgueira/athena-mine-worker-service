@@ -9,6 +9,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -32,10 +33,10 @@ public class MiningResult implements Serializable {
     private String repositoryName;
     
     @Column
-    private Instant startedAt;
+    private LocalDateTime startedAt;
     
     @Column
-    private Instant lastUpdatedAt;
+    private LocalDateTime lastUpdatedAt;
     
     @Column
     private Integer totalCommits;
@@ -84,19 +85,19 @@ public class MiningResult implements Serializable {
         this.repositoryName = repositoryName;
     }
 
-    public Instant getStartedAt() {
+    public LocalDateTime getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(Instant startedAt) {
+    public void setStartedAt(LocalDateTime startedAt) {
         this.startedAt = startedAt;
     }
 
-    public Instant getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
-    public void setLastUpdatedAt(Instant lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
