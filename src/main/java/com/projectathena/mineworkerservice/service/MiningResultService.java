@@ -21,9 +21,7 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class MiningResultService {
@@ -58,7 +56,7 @@ public class MiningResultService {
         miningResult.setStatus(MiningStatus.IN_PROGRESS);
         miningResult.setTotalCommits(0);
 
-        return miningResultRepository.save(miningResult);
+        return miningResultRepository.save(miningResult).subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<Void> saveCommitPage(Job job, List<Commit> commits, String cursor) {
@@ -112,7 +110,7 @@ public class MiningResultService {
                             }));
                 })
                 .as(transactionalOperator::transactional)
-                .then();
+                .then().subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<Void> completeMiningResult(Job job) {
@@ -194,6 +192,7 @@ public class MiningResultService {
     }
 
     public Mono<MiningResult> findForUserAndRepository(MiningResultRequest request) {
+
         Mono<MiningResult> miningResultMono = miningResultRepository.findByJobUserAndRepository(
                 request.userEmail(),
                 request.gitRepositoryOwner(),
@@ -202,38 +201,57 @@ public class MiningResultService {
 
         return miningResultMono.flatMap(result -> {
             Flux<MiningCommit> commitsFlux = miningCommitRepository.findByMiningResultId(result.getId());
-            Flux<MiningCommit> populatedCommitsFlux = commitsFlux
-                    .flatMap(commit -> {
-                        if (commit.getAuthorId() == null || commit.getCommitterId() == null) {
-                            return Mono.just(commit);
-                        }
 
-                        Mono<GitAuthor> authorMono = gitAuthorRepository.findById(commit.getAuthorId());
-                        Mono<GitAuthor> committerMono;
+            Mono<List<MiningCommit>> commitsListMono = commitsFlux.collectList();
+
+            return commitsListMono.flatMap(commitsList -> {
+                if (commitsList.isEmpty()) {
+                    result.setCommits(Collections.emptyList());
+                    return Mono.just(result);
+                }
+
+                Set<UUID> authorIdsToFetch = new HashSet<>();
+                commitsList.forEach(commit -> {
+                    if (commit.getAuthorId() != null) {
+                        authorIdsToFetch.add(commit.getAuthorId());
+                    }
+                    if (commit.getCommitterId() != null && !commit.getAuthoredByCommitter()) {
+                        authorIdsToFetch.add(commit.getCommitterId());
+                    }
+                });
+
+                if (authorIdsToFetch.isEmpty()) {
+                    return Mono.just(applyOriginalFilter(result, commitsList));
+                }
+
+                Mono<Map<UUID, GitAuthor>> authorMapMono = gitAuthorRepository.findAllById(authorIdsToFetch)
+                        .collectMap(GitAuthor::getId);
+
+                return authorMapMono.map(authorMap -> {
+                    commitsList.forEach(commit -> {
+                        if (commit.getAuthorId() != null) {
+                            commit.setAuthor(authorMap.get(commit.getAuthorId()));
+                        }
 
                         if (commit.getAuthoredByCommitter()) {
-                            committerMono = authorMono;
-                        } else {
-                            committerMono = gitAuthorRepository.findById(commit.getCommitterId());
+                            commit.setCommitter(commit.getAuthor());
+                        } else if (commit.getCommitterId() != null) {
+                            commit.setCommitter(authorMap.get(commit.getCommitterId()));
                         }
+                    });
+                    return applyOriginalFilter(result, commitsList);
 
-                        return Mono.zip(authorMono, committerMono)
-                                .map(tuple -> {
-                                    commit.setAuthor(tuple.getT1());
-                                    commit.setCommitter(tuple.getT2());
-                                    return commit;
-                                })
-                                .defaultIfEmpty(commit);
-                    })
-                    .filter(commit -> commit.getAuthor() != null && commit.getAuthor().getLogin() != null);
+                }).defaultIfEmpty(applyOriginalFilter(result, commitsList));
 
-            Mono<List<MiningCommit>> commitsListMono = populatedCommitsFlux.collectList();
-
-            return commitsListMono.map(commitsList -> {
-                result.setCommits(commitsList);
-                return result;
             });
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    private MiningResult applyOriginalFilter(MiningResult result, List<MiningCommit> commitsList) {
+        List<MiningCommit> filteredCommits = commitsList.stream()
+                .filter(commit -> commit.getAuthor() != null && commit.getAuthor().getLogin() != null)
+                .toList();
+        result.setCommits(filteredCommits);
+        return result;
+    }
 }
