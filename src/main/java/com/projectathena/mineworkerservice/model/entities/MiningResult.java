@@ -46,7 +46,7 @@ public class MiningResult implements Serializable {
     @Column(columnDefinition = "TEXT")
     private String lastCursor;
     
-    @OneToMany(mappedBy = "miningResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "miningResult", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<MiningCommit> commits;
 

@@ -13,6 +13,7 @@ import com.projectathena.mineworkerservice.repositories.MiningCommitRepository;
 import com.projectathena.mineworkerservice.repositories.MiningResultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -139,7 +140,9 @@ public class MiningResultService {
         return gitAuthorRepository.save(newAuthor);
     }
 
+    @Cacheable(value = "miningResults", key = "#request")
     public Optional<MiningResult> findForUserAndRepository(MiningResultRequest request) {
+        logger.warn("Executed without cache...");
         return miningResultRepository.findForUserAndRepository(request.userEmail(), request.gitRepositoryOwner(), request.gitRepositoryName());
     }
 }

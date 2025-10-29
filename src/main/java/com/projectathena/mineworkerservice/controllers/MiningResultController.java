@@ -3,6 +3,7 @@ package com.projectathena.mineworkerservice.controllers;
 import com.projectathena.mineworkerservice.model.dto.requests.MiningResultRequest;
 import com.projectathena.mineworkerservice.model.entities.MiningResult;
 import com.projectathena.mineworkerservice.service.MiningResultService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class MiningResultController {
         this.miningResultService = miningResultService;
     }
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<?> getMiningResult(
             @RequestParam String userName,
             @RequestParam String userEmail,
